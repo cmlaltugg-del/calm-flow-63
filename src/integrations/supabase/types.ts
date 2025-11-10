@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      yoga_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          instructions: string | null
+          intensity_level: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          instructions?: string | null
+          intensity_level: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          instructions?: string | null
+          intensity_level?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

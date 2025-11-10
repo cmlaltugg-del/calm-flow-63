@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PieChart, Activity, Droplet, Utensils, Wind } from "lucide-react";
+import { PieChart, Activity, Droplet, Utensils, Sparkles } from "lucide-react";
 
 const Dashboard = () => {
   const [waterIntake, setWaterIntake] = useState(0);
@@ -20,6 +20,11 @@ const Dashboard = () => {
   const todayMeal = {
     title: "Protein Bowl",
     image: "🥗",
+  };
+
+  const todayYoga = {
+    title: "Gentle Stretch Flow",
+    duration: "10 minutes",
   };
 
   const addWater = () => {
@@ -126,12 +131,17 @@ const Dashboard = () => {
           </Button>
         </Card>
 
-        {/* Breathing Card */}
-        <Card className="p-6 rounded-3xl shadow-wellness bg-accent/50 border-border/50">
-          <div className="flex items-center gap-2">
-            <Wind className="h-5 w-5 text-primary" />
-            <p className="text-base font-light">Take a 2 min breathing reset</p>
+        {/* Yoga Card */}
+        <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-6 w-6 text-[#4A4A4A]" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm text-muted-foreground">Today's Yoga</p>
+              <h3 className="text-xl font-medium">{todayYoga.title}</h3>
+              <p className="text-muted-foreground">{todayYoga.duration}</p>
+            </div>
           </div>
+          <Button className="w-full rounded-full h-12">Start Yoga</Button>
         </Card>
 
         {/* Footer Message */}
