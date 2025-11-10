@@ -140,10 +140,15 @@ Deno.serve(async (req) => {
         reps_or_duration: exercise.reps_or_duration,
         meal_title: meal.title,
         meal_instructions: meal.instructions,
+        meal_ingredients: meal.ingredients || null,
+        meal_calories_estimate: meal.calories || null,
         yoga_title: yoga.title,
         yoga_instructions: yoga.instructions,
         yoga_duration_minutes: yoga.duration_minutes,
         daily_water_target_liters: dailyWaterTarget,
+        is_completed_exercise: false,
+        is_completed_yoga: false,
+        is_completed_meal: false,
       }, {
         onConflict: 'user_id,plan_date'
       })

@@ -71,6 +71,8 @@ Deno.serve(async (req) => {
       reps_or_duration: randomExercise.reps_or_duration,
       meal_title: randomMeal.title,
       meal_instructions: randomMeal.instructions,
+      meal_ingredients: randomMeal.ingredients || null,
+      meal_calories_estimate: randomMeal.calories || null,
       yoga_title: randomYoga.title,
       yoga_instructions: randomYoga.instructions,
       yoga_duration_minutes: randomYoga.duration_minutes,
