@@ -43,48 +43,84 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
 
-      // Wait a moment for auth to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for auth to complete
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user && height && weight && goal && workoutMode) {
-        // Create profile
+      if (!user) {
+        throw new Error('Authentication failed. Please try again.');
+      }
+
+      if (height && weight && goal && workoutMode) {
+        // Upsert profile with onboarding data
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             user_id: user.id,
             height: parseFloat(height),
             weight: parseFloat(weight),
             goal,
             workout_mode: workoutMode
+          }, {
+            onConflict: 'user_id'
           });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw new Error('Failed to save your profile');
+        }
 
-        // Generate daily plan
-        const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
-        if (planError) {
-          console.error('Error generating daily plan:', planError);
-          toast({
-            title: "Almost there!",
-            description: "Your account is created. We're preparing your personal plan.",
-          });
+        // Generate daily plan with retry logic
+        let planGenerated = false;
+        let retryCount = 0;
+        const maxRetries = 1;
+
+        while (!planGenerated && retryCount <= maxRetries) {
+          try {
+            const { data: planData, error: planError } = await supabase.functions.invoke('generateDailyPlan');
+            
+            if (planError) throw planError;
+            
+            planGenerated = true;
+            
+            toast({
+              title: "Welcome!",
+              description: "Your personalized plan is ready.",
+            });
+          } catch (planError: any) {
+            console.error(`Daily plan generation attempt ${retryCount + 1} failed:`, planError);
+            retryCount++;
+            
+            if (retryCount > maxRetries) {
+              toast({
+                title: "Almost there!",
+                description: "We couldn't prepare your plan yet. Try again in a moment.",
+              });
+            } else {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
         }
       }
 
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
-      });
-
       console.log('signup_completed');
+      
+      // Clear onboarding data from session
+      sessionStorage.removeItem('height');
+      sessionStorage.removeItem('weight');
+      sessionStorage.removeItem('goal');
+      sessionStorage.removeItem('workoutMode');
+      sessionStorage.removeItem('onboardingComplete');
+      
       onSignupSuccess();
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: "Signup failed",
-        description: error.message,
+        description: error.message || 'An error occurred during signup',
         variant: "destructive",
       });
     } finally {
