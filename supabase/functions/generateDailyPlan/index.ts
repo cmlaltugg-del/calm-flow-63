@@ -5,31 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface Profile {
-  weight: number;
-  goal: 'lose_weight' | 'gain_muscle' | 'maintain';
-  workout_mode: 'home' | 'gym';
-}
-
-interface Exercise {
-  title: string;
-  instructions: string;
-  reps_or_duration: string;
-}
-
-interface Meal {
-  title: string;
-  instructions: string;
-}
-
-interface YogaSession {
-  title: string;
-  instructions: string;
-  duration_minutes: number;
-}
-
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -52,7 +28,7 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
-      console.error('User authentication error:', userError);
+      console.error('Authentication error:', userError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -61,10 +37,10 @@ Deno.serve(async (req) => {
 
     console.log('Generating daily plan for user:', user.id);
 
-    // 1. Fetch user profile
+    // Fetch user profile
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('weight, goal, workout_mode')
+      .select('*')
       .eq('user_id', user.id)
       .single();
 
@@ -76,109 +52,107 @@ Deno.serve(async (req) => {
       );
     }
 
-    const typedProfile = profile as Profile;
-    console.log('User profile:', typedProfile);
+    console.log('Profile:', profile);
 
-    // 2. Select exercise based on workout_mode
-    const exerciseTable = typedProfile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
-    const { data: exercises, error: exerciseError } = await supabaseClient
-      .from(exerciseTable)
-      .select('title, instructions, reps_or_duration');
-
-    if (exerciseError || !exercises || exercises.length === 0) {
-      console.error('Exercise fetch error:', exerciseError);
-      return new Response(
-        JSON.stringify({ error: 'No exercises found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Select exercise based on workout mode
+    let exercise;
+    if (profile.workout_mode === 'home') {
+      const { data, error } = await supabaseClient
+        .from('exercises_home')
+        .select('*')
+        .limit(10);
+      
+      if (error) {
+        console.error('Error fetching home exercises:', error);
+        throw error;
+      }
+      
+      // Randomly select one
+      exercise = data[Math.floor(Math.random() * data.length)];
+    } else {
+      const { data, error } = await supabaseClient
+        .from('exercises_gym')
+        .select('*')
+        .limit(10);
+      
+      if (error) {
+        console.error('Error fetching gym exercises:', error);
+        throw error;
+      }
+      
+      exercise = data[Math.floor(Math.random() * data.length)];
     }
 
-    // Pick random exercise
-    const selectedExercise = exercises[Math.floor(Math.random() * exercises.length)] as Exercise;
-    console.log('Selected exercise:', selectedExercise.title);
+    console.log('Selected exercise:', exercise.title);
 
-    // 3. Select meal based on goal
-    let mealQuery = supabaseClient.from('meals').select('title, instructions');
+    // Select meal based on goal
+    let mealQuery = supabaseClient.from('meals').select('*');
     
-    if (typedProfile.goal === 'gain_muscle') {
+    if (profile.goal === 'gain_muscle') {
       mealQuery = mealQuery.eq('protein_focused', true);
     }
-
-    const { data: meals, error: mealError } = await mealQuery;
-
-    if (mealError || !meals || meals.length === 0) {
-      console.error('Meal fetch error:', mealError);
-      return new Response(
-        JSON.stringify({ error: 'No meals found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Pick random meal
-    const selectedMeal = meals[Math.floor(Math.random() * meals.length)] as Meal;
-    console.log('Selected meal:', selectedMeal.title);
-
-    // 4. Select yoga session based on goal
-    let yogaIntensities: string[] = [];
     
-    if (typedProfile.goal === 'lose_weight') {
+    const { data: meals, error: mealsError } = await mealQuery.limit(10);
+    
+    if (mealsError) {
+      console.error('Error fetching meals:', mealsError);
+      throw mealsError;
+    }
+    
+    const meal = meals[Math.floor(Math.random() * meals.length)];
+    console.log('Selected meal:', meal.title);
+
+    // Select yoga based on goal intensity
+    let yogaIntensities = ['low', 'medium'];
+    if (profile.goal === 'lose_weight' || profile.goal === 'gain_muscle') {
       yogaIntensities = ['medium', 'high'];
-    } else if (typedProfile.goal === 'gain_muscle') {
-      yogaIntensities = ['medium', 'high'];
-    } else {
-      yogaIntensities = ['low', 'medium'];
     }
 
     const { data: yogaSessions, error: yogaError } = await supabaseClient
       .from('yoga_sessions')
-      .select('title, instructions, duration_minutes')
-      .in('intensity_level', yogaIntensities);
+      .select('*')
+      .in('intensity_level', yogaIntensities)
+      .limit(10);
 
-    if (yogaError || !yogaSessions || yogaSessions.length === 0) {
-      console.error('Yoga fetch error:', yogaError);
-      return new Response(
-        JSON.stringify({ error: 'No yoga sessions found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (yogaError) {
+      console.error('Error fetching yoga sessions:', yogaError);
+      throw yogaError;
     }
 
-    // Pick random yoga session
-    const selectedYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)] as YogaSession;
-    console.log('Selected yoga:', selectedYoga.title);
+    const yoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+    console.log('Selected yoga:', yoga.title);
 
-    // 5. Calculate daily water target
-    const dailyWaterTarget = Math.round(typedProfile.weight * 0.033 * 10) / 10;
+    // Calculate water target
+    const dailyWaterTarget = Math.round((profile.weight * 0.033) * 10) / 10;
     console.log('Daily water target:', dailyWaterTarget);
 
-    // 6. Insert or update daily_plans
+    // Get today's date
     const today = new Date().toISOString().split('T')[0];
-    
-    const planData = {
-      user_id: user.id,
-      plan_date: today,
-      exercise_title: selectedExercise.title,
-      exercise_instructions: selectedExercise.instructions,
-      reps_or_duration: selectedExercise.reps_or_duration,
-      meal_title: selectedMeal.title,
-      meal_instructions: selectedMeal.instructions,
-      yoga_title: selectedYoga.title,
-      yoga_instructions: selectedYoga.instructions,
-      yoga_duration_minutes: selectedYoga.duration_minutes,
-      daily_water_target_liters: dailyWaterTarget,
-    };
 
+    // Insert or update daily plan
     const { data: plan, error: planError } = await supabaseClient
       .from('daily_plans')
-      .upsert(planData, { onConflict: 'user_id,plan_date' })
+      .upsert({
+        user_id: user.id,
+        plan_date: today,
+        exercise_title: exercise.title,
+        exercise_instructions: exercise.instructions,
+        reps_or_duration: exercise.reps_or_duration,
+        meal_title: meal.title,
+        meal_instructions: meal.instructions,
+        yoga_title: yoga.title,
+        yoga_instructions: yoga.instructions,
+        yoga_duration_minutes: yoga.duration_minutes,
+        daily_water_target_liters: dailyWaterTarget,
+      }, {
+        onConflict: 'user_id,plan_date'
+      })
       .select()
       .single();
 
     if (planError) {
-      console.error('Daily plan insert error:', planError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create daily plan', details: planError }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('Error creating daily plan:', planError);
+      throw planError;
     }
 
     console.log('Daily plan created successfully');
@@ -186,18 +160,39 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        plan: plan,
-        message: 'Daily plan generated successfully'
+        plan: {
+          exercise: {
+            title: exercise.title,
+            instructions: exercise.instructions,
+            reps_or_duration: exercise.reps_or_duration,
+          },
+          meal: {
+            title: meal.title,
+            instructions: meal.instructions,
+          },
+          yoga: {
+            title: yoga.title,
+            instructions: yoga.instructions,
+            duration_minutes: yoga.duration_minutes,
+          },
+          daily_water_target_liters: dailyWaterTarget,
+        }
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {
-    console.error('Unexpected error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in generateDailyPlan:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: errorMessage }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });

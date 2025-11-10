@@ -1,30 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Activity, Droplet, Utensils, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const [waterIntake, setWaterIntake] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [dailyPlan, setDailyPlan] = useState<any>(null);
+  const { toast } = useToast();
   const userName = "Friend";
   const weight = localStorage.getItem("userWeight") || "70";
-  const dailyWaterTarget = Math.round(parseInt(weight) * 0.033 * 10) / 10;
+  const dailyWaterTarget = dailyPlan?.daily_water_target_liters || Math.round(parseInt(weight) * 0.033 * 10) / 10;
   const waterProgress = Math.min((waterIntake / dailyWaterTarget) * 100, 100);
 
-  // Mock data - will be replaced with real data from backend
+  // Mock data - used as fallback if no plan exists
   const todayExercise = {
-    title: "Morning Stretch",
-    duration: "15 minutes",
+    title: dailyPlan?.exercise_title || "Morning Stretch",
+    duration: dailyPlan?.reps_or_duration || "15 minutes",
   };
 
   const todayMeal = {
-    title: "Protein Bowl",
+    title: dailyPlan?.meal_title || "Protein Bowl",
     image: "🥗",
   };
 
   const todayYoga = {
-    title: "Gentle Stretch Flow",
-    duration: "10 minutes",
+    title: dailyPlan?.yoga_title || "Gentle Stretch Flow",
+    duration: dailyPlan?.yoga_duration_minutes ? `${dailyPlan.yoga_duration_minutes} minutes` : "10 minutes",
+  };
+
+  useEffect(() => {
+    fetchDailyPlan();
+  }, []);
+
+  const fetchDailyPlan = async () => {
+    try {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+
+      // Fetch daily plan for today
+      const { data, error } = await supabase
+        .from('daily_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('plan_date', today)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching daily plan:', error);
+        throw error;
+      }
+
+      if (!data) {
+        // No plan exists for today - generate one
+        console.log('No plan found for today, generating...');
+        await generateNewPlan();
+      } else {
+        setDailyPlan(data);
+      }
+    } catch (error) {
+      console.error('Error in fetchDailyPlan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your daily plan.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateNewPlan = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generateDailyPlan');
+
+      if (error) {
+        console.error('Error generating plan:', error);
+        throw error;
+      }
+
+      // Refetch the plan after generation
+      await fetchDailyPlan();
+    } catch (error) {
+      console.error('Error generating new plan:', error);
+    }
   };
 
   const addWater = () => {
