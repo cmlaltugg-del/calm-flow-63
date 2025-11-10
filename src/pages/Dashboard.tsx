@@ -91,6 +91,19 @@ const Dashboard = () => {
           <Button className="w-full rounded-full h-12">Start</Button>
         </Card>
 
+        {/* Yoga Card */}
+        <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-6 w-6 text-[#4A4A4A]" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm text-muted-foreground">Today's Yoga</p>
+              <h3 className="text-xl font-medium">{todayYoga.title}</h3>
+              <p className="text-muted-foreground">{todayYoga.duration}</p>
+            </div>
+          </div>
+          <Button className="w-full rounded-full h-12">Start Yoga</Button>
+        </Card>
+
         {/* Water Tracker */}
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
           <div className="space-y-3">
@@ -129,19 +142,6 @@ const Dashboard = () => {
           <Button variant="outline" className="w-full rounded-full h-12">
             View Meal
           </Button>
-        </Card>
-
-        {/* Yoga Card */}
-        <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-[#4A4A4A]" />
-            <div className="flex-1 space-y-1">
-              <p className="text-sm text-muted-foreground">Today's Yoga</p>
-              <h3 className="text-xl font-medium">{todayYoga.title}</h3>
-              <p className="text-muted-foreground">{todayYoga.duration}</p>
-            </div>
-          </div>
-          <Button className="w-full rounded-full h-12">Start Yoga</Button>
         </Card>
 
         {/* Footer Message */}
