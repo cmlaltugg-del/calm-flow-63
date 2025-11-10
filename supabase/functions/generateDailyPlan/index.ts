@@ -72,21 +72,11 @@ Deno.serve(async (req) => {
     const activityFactor = profile.workout_mode === 'gym' ? 1.55 : 1.45;
     const tdee = Math.round(bmr * activityFactor);
 
-    // Calculate calorie target based on goal
-    let calorieTarget;
-    if (profile.goal === 'lose_weight') {
-      calorieTarget = tdee - 500;
-    } else if (profile.goal === 'gain_muscle') {
-      calorieTarget = tdee + 250;
-    } else {
-      calorieTarget = tdee;
-    }
-    
-    // Ensure minimum safe calorie intake
-    calorieTarget = Math.max(calorieTarget, 1200);
+    // Calculate calorie target: TDEE - 350
+    const calorieTarget = Math.round(tdee - 350);
 
-    // Calculate protein target (1.8g per kg of target weight)
-    const proteinTarget = Math.round(1.8 * targetWeight);
+    // Calculate protein target (2g per kg of target weight)
+    const proteinTarget = Math.round(2 * targetWeight);
 
     console.log('Calculated targets:', {
       bmr,
@@ -126,14 +116,12 @@ Deno.serve(async (req) => {
 
     console.log('Selected exercise:', exercise.title);
 
-    // Select meal based on goal
-    let mealQuery = supabaseClient.from('meals').select('*');
-    
-    if (profile.goal === 'gain_muscle') {
-      mealQuery = mealQuery.eq('protein_focused', true);
-    }
-    
-    const { data: meals, error: mealsError } = await mealQuery.limit(10);
+    // Select protein-focused meal
+    const { data: meals, error: mealsError } = await supabaseClient
+      .from('meals')
+      .select('*')
+      .eq('protein_focused', true)
+      .limit(10);
     
     if (mealsError) {
       console.error('Error fetching meals:', mealsError);
@@ -143,11 +131,10 @@ Deno.serve(async (req) => {
     const meal = meals[Math.floor(Math.random() * meals.length)];
     console.log('Selected meal:', meal.title);
 
-    // Select yoga based on goal intensity
-    let yogaIntensities = ['low', 'medium'];
-    if (profile.goal === 'lose_weight' || profile.goal === 'gain_muscle') {
-      yogaIntensities = ['medium', 'high'];
-    }
+    // Select yoga based on workout mode
+    let yogaIntensities = profile.workout_mode === 'home' 
+      ? ['low', 'medium'] 
+      : ['medium', 'high'];
 
     const { data: yogaSessions, error: yogaError } = await supabaseClient
       .from('yoga_sessions')
