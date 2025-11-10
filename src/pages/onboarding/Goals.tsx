@@ -15,7 +15,7 @@ const Goals = () => {
   const [selectedGoal, setSelectedGoal] = useState<string>("");
 
   const handleContinue = () => {
-    localStorage.setItem("userGoal", selectedGoal);
+    sessionStorage.setItem("goal", selectedGoal);
     navigate("/onboarding/workout-mode");
   };
 

@@ -10,9 +10,8 @@ const HeightWeight = () => {
   const [weight, setWeight] = useState("");
 
   const handleContinue = () => {
-    // Store in localStorage for now
-    localStorage.setItem("userHeight", height);
-    localStorage.setItem("userWeight", weight);
+    sessionStorage.setItem("height", height);
+    sessionStorage.setItem("weight", weight);
     navigate("/onboarding/goals");
   };
 

@@ -1,1 +1,7 @@
 project_id = "yjecywlhsnqwovqaajni"
+
+[functions.generateDailyPlan]
+verify_jwt = true
+
+[functions.generatePreviewPlan]
+verify_jwt = false

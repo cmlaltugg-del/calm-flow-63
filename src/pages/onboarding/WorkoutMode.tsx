@@ -14,8 +14,9 @@ const WorkoutMode = () => {
   const [selectedMode, setSelectedMode] = useState<string>("");
 
   const handleContinue = () => {
-    localStorage.setItem("workoutMode", selectedMode);
-    navigate("/onboarding/water-preview");
+    sessionStorage.setItem("workoutMode", selectedMode);
+    sessionStorage.setItem("onboardingComplete", "true");
+    navigate("/dashboard");
   };
 
   return (
