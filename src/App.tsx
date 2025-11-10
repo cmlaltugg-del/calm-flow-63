@@ -9,6 +9,9 @@ import Goals from "./pages/onboarding/Goals";
 import WorkoutMode from "./pages/onboarding/WorkoutMode";
 import WaterPreview from "./pages/onboarding/WaterPreview";
 import Dashboard from "./pages/Dashboard";
+import ExerciseDetail from "./pages/ExerciseDetail";
+import YogaDetail from "./pages/YogaDetail";
+import MealDetail from "./pages/MealDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/onboarding/workout-mode" element={<WorkoutMode />} />
           <Route path="/onboarding/water-preview" element={<WaterPreview />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/exercise-detail" element={<ExerciseDetail />} />
+          <Route path="/yoga-detail" element={<YogaDetail />} />
+          <Route path="/meal-detail" element={<MealDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

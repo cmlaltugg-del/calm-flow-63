@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [waterIntake, setWaterIntake] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dailyPlan, setDailyPlan] = useState<any>(null);
@@ -16,20 +18,21 @@ const Dashboard = () => {
   const dailyWaterTarget = dailyPlan?.daily_water_target_liters || Math.round(parseInt(weight) * 0.033 * 10) / 10;
   const waterProgress = Math.min((waterIntake / dailyWaterTarget) * 100, 100);
 
-  // Mock data - used as fallback if no plan exists
   const todayExercise = {
     title: dailyPlan?.exercise_title || "Morning Stretch",
     duration: dailyPlan?.reps_or_duration || "15 minutes",
+    instructions: dailyPlan?.exercise_instructions || "",
   };
 
   const todayMeal = {
     title: dailyPlan?.meal_title || "Protein Bowl",
-    image: "🥗",
+    instructions: dailyPlan?.meal_instructions || "",
   };
 
   const todayYoga = {
     title: dailyPlan?.yoga_title || "Gentle Stretch Flow",
     duration: dailyPlan?.yoga_duration_minutes ? `${dailyPlan.yoga_duration_minutes} minutes` : "10 minutes",
+    instructions: dailyPlan?.yoga_instructions || "",
   };
 
   useEffect(() => {
@@ -158,7 +161,18 @@ const Dashboard = () => {
               <p className="text-muted-foreground">{todayExercise.duration}</p>
             </div>
           </div>
-          <Button className="w-full rounded-full h-12">Start</Button>
+          <Button 
+            className="w-full rounded-full h-12"
+            onClick={() => navigate("/exercise-detail", { 
+              state: { 
+                title: todayExercise.title, 
+                instructions: todayExercise.instructions,
+                duration: todayExercise.duration 
+              } 
+            })}
+          >
+            Start
+          </Button>
         </Card>
 
         {/* Yoga Card */}
@@ -171,7 +185,18 @@ const Dashboard = () => {
               <p className="text-muted-foreground">{todayYoga.duration}</p>
             </div>
           </div>
-          <Button className="w-full rounded-full h-12">Start Yoga</Button>
+          <Button 
+            className="w-full rounded-full h-12"
+            onClick={() => navigate("/yoga-detail", { 
+              state: { 
+                title: todayYoga.title, 
+                instructions: todayYoga.instructions,
+                duration: todayYoga.duration 
+              } 
+            })}
+          >
+            Start Yoga
+          </Button>
         </Card>
 
         {/* Water Tracker */}
@@ -209,7 +234,16 @@ const Dashboard = () => {
               <h3 className="text-xl font-medium">{todayMeal.title}</h3>
             </div>
           </div>
-          <Button variant="outline" className="w-full rounded-full h-12">
+          <Button 
+            variant="outline" 
+            className="w-full rounded-full h-12"
+            onClick={() => navigate("/meal-detail", { 
+              state: { 
+                title: todayMeal.title, 
+                instructions: todayMeal.instructions 
+              } 
+            })}
+          >
             View Meal
           </Button>
         </Card>
