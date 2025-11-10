@@ -56,18 +56,44 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       }
 
       if (height && weight && gender && targetWeight && age && goal && workoutMode) {
+        // Calculate BMR, TDEE, and targets
+        const weightNum = parseFloat(weight);
+        const heightNum = parseFloat(height);
+        const ageNum = parseInt(age);
+        const targetWeightNum = parseFloat(targetWeight);
+        
+        // BMR calculation
+        let bmr;
+        if (gender === 'male') {
+          bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
+        } else {
+          bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+        }
+        
+        // TDEE calculation
+        const activityFactor = workoutMode === 'home' ? 1.45 : 1.55;
+        const tdee = bmr * activityFactor;
+        
+        // Daily calorie target
+        const daily_calories = Math.round(tdee - 350);
+        
+        // Protein target
+        const protein_target = Math.round(targetWeightNum * 2);
+
         // Upsert profile with onboarding data
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             user_id: user.id,
-            height: parseFloat(height),
-            weight: parseFloat(weight),
+            height: heightNum,
+            weight: weightNum,
             gender: gender,
-            target_weight_kg: parseFloat(targetWeight),
-            age: parseInt(age),
+            target_weight_kg: targetWeightNum,
+            age: ageNum,
             goal,
-            workout_mode: workoutMode
+            workout_mode: workoutMode,
+            daily_calories,
+            protein_target
           }, {
             onConflict: 'user_id'
           });

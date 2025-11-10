@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [isPreview, setIsPreview] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [signupCardSource, setSignupCardSource] = useState<string>('');
+  const [profile, setProfile] = useState<any>(null);
 
   const dailyWaterTarget = dailyPlan?.daily_water_target_liters || 2.5;
   const waterProgress = (waterIntake / dailyWaterTarget) * 100;
@@ -49,6 +50,20 @@ const Dashboard = () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
       
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user!.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      } else {
+        setProfile(profileData);
+      }
+      
+      // Fetch daily plan
       const { data, error } = await supabase
         .from('daily_plans')
         .select('*')
@@ -246,7 +261,7 @@ const Dashboard = () => {
                   <span>Target Weight</span>
                 </div>
                 <p className="text-2xl font-bold">
-                  {dailyPlan?.target_weight_kg || sessionStorage.getItem('targetWeight') || '—'} kg
+                  {(isPreview ? sessionStorage.getItem('targetWeight') : profile?.target_weight_kg) || '—'} kg
                 </p>
               </div>
               <div className="space-y-1">
@@ -255,7 +270,7 @@ const Dashboard = () => {
                   <span>Daily Calories</span>
                 </div>
                 <p className="text-2xl font-bold">
-                  {dailyPlan?.calorie_target || '—'} kcal
+                  {(isPreview ? dailyPlan?.calorie_target : profile?.daily_calories) || '—'} kcal
                 </p>
               </div>
               <div className="space-y-1">
@@ -264,7 +279,7 @@ const Dashboard = () => {
                   <span>Protein Target</span>
                 </div>
                 <p className="text-2xl font-bold">
-                  {dailyPlan?.protein_target_g || '—'} g
+                  {(isPreview ? dailyPlan?.protein_target_g : profile?.protein_target) || '—'} g
                 </p>
               </div>
               <div className="space-y-1">
@@ -277,13 +292,6 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            {dailyPlan?.calorie_target && dailyPlan?.meal_calories_estimate && (
-              <div className="pt-2 border-t border-border">
-                <Badge variant="secondary" className="w-full justify-center py-2">
-                  Today's Net: {-dailyPlan.meal_calories_estimate} kcal vs Target {dailyPlan.calorie_target} kcal
-                </Badge>
-              </div>
-            )}
           </CardContent>
         </Card>
 

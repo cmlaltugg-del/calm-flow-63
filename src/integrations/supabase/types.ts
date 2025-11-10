@@ -174,10 +174,12 @@ export type Database = {
         Row: {
           age: number | null
           created_at: string
+          daily_calories: number | null
           gender: string | null
           goal: string | null
           height: number | null
           id: string
+          protein_target: number | null
           target_weight_kg: number | null
           user_id: string
           weight: number | null
@@ -186,10 +188,12 @@ export type Database = {
         Insert: {
           age?: number | null
           created_at?: string
+          daily_calories?: number | null
           gender?: string | null
           goal?: string | null
           height?: number | null
           id?: string
+          protein_target?: number | null
           target_weight_kg?: number | null
           user_id: string
           weight?: number | null
@@ -198,10 +202,12 @@ export type Database = {
         Update: {
           age?: number | null
           created_at?: string
+          daily_calories?: number | null
           gender?: string | null
           goal?: string | null
           height?: number | null
           id?: string
+          protein_target?: number | null
           target_weight_kg?: number | null
           user_id?: string
           weight?: number | null
