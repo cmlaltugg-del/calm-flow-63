@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ interface SignupModalProps {
 }
 
 export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }: SignupModalProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,17 +27,13 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
       });
 
       if (error) throw error;
+      if (!authData.user) throw new Error('Signup failed - no user returned');
 
       // Get onboarding data from session storage
       const height = sessionStorage.getItem('height');
@@ -45,20 +43,6 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       const age = sessionStorage.getItem('age');
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
-
-      // Wait for auth to complete and get user
-      let user = null;
-      let attempts = 0;
-      while (!user && attempts < 5) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const { data } = await supabase.auth.getUser();
-        user = data.user;
-        attempts++;
-      }
-
-      if (!user) {
-        throw new Error('Authentication failed. Please try again.');
-      }
 
       if (height && weight && gender && targetWeight && age && goal && workoutMode) {
         // Calculate BMR, TDEE, and targets
@@ -85,11 +69,11 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         // Protein target
         const protein_target = Math.round(targetWeightNum * 2);
 
-        // Upsert profile with onboarding data
+        // Create profile with onboarding data
         const { error: profileError } = await supabase
           .from('profiles')
-          .upsert({
-            user_id: user.id,
+          .insert({
+            user_id: authData.user.id,
             height: heightNum,
             weight: weightNum,
             gender: gender,
@@ -99,8 +83,6 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
             workout_mode: workoutMode,
             daily_calories,
             protein_target
-          }, {
-            onConflict: 'user_id'
           });
 
         if (profileError) {
@@ -108,37 +90,25 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
           throw new Error('Failed to save your profile');
         }
 
-        // Verify profile was created by fetching it back
-        let profileVerified = false;
-        for (let i = 0; i < 3; i++) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const { data: verifyProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (verifyProfile) {
-            profileVerified = true;
-            break;
-          }
-        }
+        console.log('Profile created successfully for user:', authData.user.id);
 
-        if (!profileVerified) {
+        // Generate daily plan
+        const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
+        
+        if (planError) {
+          console.error('Plan generation error:', planError);
           toast({
-            title: "Almost there!",
-            description: "Your account is ready. Refresh the page to continue.",
+            title: "Welcome!",
+            description: "Your account is ready. Your plan will load shortly.",
           });
         } else {
           toast({
             title: "Welcome!",
-            description: "Your account is ready.",
+            description: "Your personalized plan is ready.",
           });
         }
       }
 
-      console.log('signup_completed');
-      
       // Clear onboarding data from session
       sessionStorage.removeItem('height');
       sessionStorage.removeItem('weight');
@@ -149,8 +119,8 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       sessionStorage.removeItem('workoutMode');
       sessionStorage.removeItem('onboardingComplete');
       
-      onSignupSuccess();
       onOpenChange(false);
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
