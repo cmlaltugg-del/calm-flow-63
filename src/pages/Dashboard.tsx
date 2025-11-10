@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { PieChart, Activity, Droplet, Utensils, Wind } from "lucide-react";
 
 const Dashboard = () => {
   const [waterIntake, setWaterIntake] = useState(0);
@@ -37,9 +38,12 @@ const Dashboard = () => {
         {/* Daily Progress Ring */}
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Daily Progress</p>
-              <p className="text-2xl font-light">45%</p>
+            <div className="flex items-center gap-3">
+              <PieChart className="h-6 w-6 text-[#4A4A4A]" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Daily Progress</p>
+                <p className="text-2xl font-light">45%</p>
+              </div>
             </div>
             <div className="relative w-20 h-20">
               <svg className="w-full h-full -rotate-90">
@@ -71,10 +75,13 @@ const Dashboard = () => {
 
         {/* Exercise Card */}
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Today's Exercise</p>
-            <h3 className="text-xl font-medium">{todayExercise.title}</h3>
-            <p className="text-muted-foreground">{todayExercise.duration}</p>
+          <div className="flex items-start gap-3">
+            <Activity className="h-6 w-6 text-[#4A4A4A] mt-1" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm text-muted-foreground">Today's Exercise</p>
+              <h3 className="text-xl font-medium">{todayExercise.title}</h3>
+              <p className="text-muted-foreground">{todayExercise.duration}</p>
+            </div>
           </div>
           <Button className="w-full rounded-full h-12">Start</Button>
         </Card>
@@ -83,13 +90,15 @@ const Dashboard = () => {
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Water Intake</p>
-                <p className="text-lg font-medium">
-                  {waterIntake.toFixed(2)}L / {dailyWaterTarget}L
-                </p>
+              <div className="flex items-center gap-2">
+                <Droplet className="h-6 w-6 text-primary" />
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Water Intake</p>
+                  <p className="text-lg font-medium">
+                    {waterIntake.toFixed(2)}L / {dailyWaterTarget}L
+                  </p>
+                </div>
               </div>
-              <span className="text-3xl">💧</span>
             </div>
             <Progress value={waterProgress} className="h-2" />
           </div>
@@ -105,8 +114,8 @@ const Dashboard = () => {
 
         {/* Meal Card */}
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">{todayMeal.image}</div>
+          <div className="flex items-center gap-3">
+            <Utensils className="h-6 w-6 text-[#4A4A4A]" />
             <div className="flex-1 space-y-1">
               <p className="text-sm text-muted-foreground">Today's Meal</p>
               <h3 className="text-xl font-medium">{todayMeal.title}</h3>
@@ -119,8 +128,8 @@ const Dashboard = () => {
 
         {/* Breathing Card */}
         <Card className="p-6 rounded-3xl shadow-wellness bg-accent/50 border-border/50">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🌿</span>
+          <div className="flex items-center gap-2">
+            <Wind className="h-5 w-5 text-primary" />
             <p className="text-base font-light">Take a 2 min breathing reset</p>
           </div>
         </Card>

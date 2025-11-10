@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Home, Dumbbell } from "lucide-react";
 
 const modes = [
-  { id: "home", label: "Home", subtitle: "No Equipment", icon: "🏠" },
-  { id: "gym", label: "Gym", subtitle: "With Equipment", icon: "🏋️" },
+  { id: "home", label: "Home", subtitle: "No Equipment", Icon: Home },
+  { id: "gym", label: "Gym", subtitle: "With Equipment", Icon: Dumbbell },
 ];
 
 const WorkoutMode = () => {
@@ -32,13 +33,18 @@ const WorkoutMode = () => {
                 key={mode.id}
                 onClick={() => setSelectedMode(mode.id)}
                 className={cn(
-                  "w-full p-6 rounded-2xl border-2 transition-all text-left flex items-center gap-4",
+                  "w-full p-6 rounded-2xl border-2 transition-all text-left flex items-center gap-2",
                   selectedMode === mode.id
                     ? "border-primary bg-accent"
                     : "border-border bg-card hover:border-muted-foreground/30"
                 )}
               >
-                <span className="text-3xl">{mode.icon}</span>
+                <mode.Icon 
+                  className={cn(
+                    "h-6 w-6",
+                    selectedMode === mode.id ? "text-primary" : "text-[#4A4A4A]"
+                  )} 
+                />
                 <div className="flex-1">
                   <div className="text-lg font-medium">{mode.label}</div>
                   <div className="text-sm text-muted-foreground">{mode.subtitle}</div>

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Scale, Activity, Heart } from "lucide-react";
 
 const goals = [
-  { id: "lose", label: "Lose Weight", icon: "📉" },
-  { id: "gain", label: "Gain Muscle", icon: "💪" },
-  { id: "maintain", label: "Maintain", icon: "⚖️" },
+  { id: "lose", label: "Lose Weight", Icon: Scale },
+  { id: "gain", label: "Gain Muscle", Icon: Activity },
+  { id: "maintain", label: "Maintain", Icon: Heart },
 ];
 
 const Goals = () => {
@@ -33,13 +34,18 @@ const Goals = () => {
                 key={goal.id}
                 onClick={() => setSelectedGoal(goal.id)}
                 className={cn(
-                  "w-full p-6 rounded-2xl border-2 transition-all text-left flex items-center gap-4",
+                  "w-full p-6 rounded-2xl border-2 transition-all text-left flex items-center gap-2",
                   selectedGoal === goal.id
                     ? "border-primary bg-accent"
                     : "border-border bg-card hover:border-muted-foreground/30"
                 )}
               >
-                <span className="text-3xl">{goal.icon}</span>
+                <goal.Icon 
+                  className={cn(
+                    "h-6 w-6",
+                    selectedGoal === goal.id ? "text-primary" : "text-[#4A4A4A]"
+                  )} 
+                />
                 <span className="text-lg font-medium">{goal.label}</span>
               </button>
             ))}

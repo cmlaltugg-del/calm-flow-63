@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Droplet } from "lucide-react";
 
 const WaterPreview = () => {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ const WaterPreview = () => {
           </div>
 
           <div className="bg-accent rounded-3xl p-8 text-center space-y-4">
-            <div className="text-6xl">💧</div>
+            <div className="flex justify-center">
+              <Droplet className="h-16 w-16 text-primary" />
+            </div>
             <div className="space-y-1">
               <div className="text-5xl font-light text-primary">{dailyTarget}L</div>
               <div className="text-sm text-muted-foreground">per day</div>
