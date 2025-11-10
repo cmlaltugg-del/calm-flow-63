@@ -117,11 +117,11 @@ Deno.serve(async (req) => {
 
     // Select yoga based on goal intensity
     const intensityMap: Record<string, string[]> = {
-      lose_weight: ['beginner', 'intermediate'],
-      gain_muscle: ['intermediate', 'advanced'],
-      maintain: ['beginner', 'intermediate'],
+      lose_weight: ['low', 'medium'],
+      gain_muscle: ['medium', 'high'],
+      maintain: ['low', 'medium'],
     };
-    const allowedIntensities = intensityMap[profile.goal] || ['beginner'];
+    const allowedIntensities = intensityMap[profile.goal] || ['low'];
     
     const { data: yogaSessions, error: yogaError } = await supabase
       .from('yoga_sessions')
