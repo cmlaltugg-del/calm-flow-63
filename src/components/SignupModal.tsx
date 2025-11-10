@@ -72,7 +72,7 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         // Create profile with onboarding data
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             user_id: authData.user.id,
             height: heightNum,
             weight: weightNum,
@@ -83,6 +83,8 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
             workout_mode: workoutMode,
             daily_calories,
             protein_target
+          }, {
+            onConflict: 'user_id'
           });
 
         if (profileError) {

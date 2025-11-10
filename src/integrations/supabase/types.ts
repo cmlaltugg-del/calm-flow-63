@@ -178,7 +178,6 @@ export type Database = {
           gender: string | null
           goal: string | null
           height: number | null
-          id: string
           protein_target: number | null
           target_weight_kg: number | null
           user_id: string
@@ -192,7 +191,6 @@ export type Database = {
           gender?: string | null
           goal?: string | null
           height?: number | null
-          id?: string
           protein_target?: number | null
           target_weight_kg?: number | null
           user_id: string
@@ -206,7 +204,6 @@ export type Database = {
           gender?: string | null
           goal?: string | null
           height?: number | null
-          id?: string
           protein_target?: number | null
           target_weight_kg?: number | null
           user_id?: string
