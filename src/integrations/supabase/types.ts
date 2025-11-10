@@ -80,6 +80,7 @@ export type Database = {
       exercises_gym: {
         Row: {
           created_at: string
+          equipment_needed: string | null
           id: string
           instructions: string | null
           intensity_level: string | null
@@ -88,6 +89,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          equipment_needed?: string | null
           id?: string
           instructions?: string | null
           intensity_level?: string | null
@@ -96,6 +98,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          equipment_needed?: string | null
           id?: string
           instructions?: string | null
           intensity_level?: string | null
@@ -136,6 +139,7 @@ export type Database = {
           calories: number | null
           created_at: string
           id: string
+          ingredients: string | null
           instructions: string | null
           protein_focused: boolean | null
           title: string
@@ -144,6 +148,7 @@ export type Database = {
           calories?: number | null
           created_at?: string
           id?: string
+          ingredients?: string | null
           instructions?: string | null
           protein_focused?: boolean | null
           title: string
@@ -152,6 +157,7 @@ export type Database = {
           calories?: number | null
           created_at?: string
           id?: string
+          ingredients?: string | null
           instructions?: string | null
           protein_focused?: boolean | null
           title?: string
