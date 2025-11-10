@@ -28,22 +28,19 @@ const Dashboard = () => {
   useEffect(() => {
     if (authLoading) return;
 
+    const onboardingComplete = sessionStorage.getItem('onboardingComplete');
+
     if (user) {
       // Authenticated user - fetch real plan
       fetchDailyPlan();
+    } else if (onboardingComplete === 'true') {
+      // Not logged in but onboarding complete - show preview
+      generatePreviewPlan();
     } else {
-      // Check if onboarding is complete
-      const onboardingComplete = sessionStorage.getItem('onboardingComplete');
-      
-      if (!onboardingComplete) {
-        // Redirect to onboarding
-        navigate('/onboarding/height-weight');
-      } else {
-        // Generate preview plan
-        generatePreviewPlan();
-      }
+      // Not logged in and no onboarding - redirect to start
+      navigate('/onboarding/height-weight');
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, navigate]);
 
   const fetchDailyPlan = async () => {
     try {
