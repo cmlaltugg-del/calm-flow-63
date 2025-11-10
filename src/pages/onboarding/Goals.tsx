@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { Scale, Activity, Heart } from "lucide-react";
 
 const goals = [
-  { id: "lose", label: "Lose Weight", Icon: Scale },
-  { id: "gain", label: "Gain Muscle", Icon: Activity },
+  { id: "weight_loss", label: "Lose Weight", Icon: Scale },
+  { id: "muscle_gain", label: "Gain Muscle", Icon: Activity },
   { id: "maintain", label: "Maintain", Icon: Heart },
 ];
 
