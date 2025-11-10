@@ -46,10 +46,15 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
 
-      // Wait for auth to complete
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const { data: { user } } = await supabase.auth.getUser();
+      // Wait for auth to complete and get user
+      let user = null;
+      let attempts = 0;
+      while (!user && attempts < 5) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const { data } = await supabase.auth.getUser();
+        user = data.user;
+        attempts++;
+      }
 
       if (!user) {
         throw new Error('Authentication failed. Please try again.');
@@ -103,37 +108,31 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
           throw new Error('Failed to save your profile');
         }
 
-        // Generate daily plan with retry logic
-        let planGenerated = false;
-        let retryCount = 0;
-        const maxRetries = 1;
+        // Wait a bit more to ensure profile is committed
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        while (!planGenerated && retryCount <= maxRetries) {
-          try {
-            const { data: planData, error: planError } = await supabase.functions.invoke('generateDailyPlan');
-            
-            if (planError) throw planError;
-            
-            planGenerated = true;
-            
+        // Generate daily plan
+        try {
+          const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
+          
+          if (planError) {
+            console.error('Daily plan generation failed:', planError);
+            toast({
+              title: "Almost there!",
+              description: "Your account is ready. Your plan will be generated when you reach the dashboard.",
+            });
+          } else {
             toast({
               title: "Welcome!",
               description: "Your personalized plan is ready.",
             });
-          } catch (planError: any) {
-            console.error(`Daily plan generation attempt ${retryCount + 1} failed:`, planError);
-            retryCount++;
-            
-            if (retryCount > maxRetries) {
-              toast({
-                title: "Almost there!",
-                description: "We couldn't prepare your plan yet. Try again in a moment.",
-              });
-            } else {
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
           }
+        } catch (planError: any) {
+          console.error('Daily plan generation error:', planError);
+          toast({
+            title: "Almost there!",
+            description: "Your account is ready. Your plan will be generated when you reach the dashboard.",
+          });
         }
       }
 
