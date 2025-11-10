@@ -162,19 +162,33 @@ const Dashboard = () => {
   const todayExercise = dailyPlan ? {
     title: dailyPlan.exercise_title,
     duration: dailyPlan.reps_or_duration,
-    instructions: dailyPlan.exercise_instructions
+    instructions: dailyPlan.exercise_instructions,
+    planId: dailyPlan.id
   } : null;
 
   const todayMeal = dailyPlan ? {
     title: dailyPlan.meal_title,
-    instructions: dailyPlan.meal_instructions
+    instructions: dailyPlan.meal_instructions,
+    ingredients: dailyPlan.meal_ingredients,
+    calories: dailyPlan.meal_calories_estimate,
+    planId: dailyPlan.id
   } : null;
 
   const todayYoga = dailyPlan ? {
     title: dailyPlan.yoga_title,
     duration: `${dailyPlan.yoga_duration_minutes} min`,
-    instructions: dailyPlan.yoga_instructions
+    instructions: dailyPlan.yoga_instructions,
+    planId: dailyPlan.id
   } : null;
+
+  // Calculate progress based on completed tasks
+  const completedTasks = isPreview ? 0 : (
+    (dailyPlan?.is_completed_exercise ? 1 : 0) +
+    (dailyPlan?.is_completed_yoga ? 1 : 0) +
+    (dailyPlan?.is_completed_meal ? 1 : 0)
+  );
+  const totalTasks = 3;
+  const progressPercentage = isPreview ? 25 : Math.round((completedTasks / totalTasks) * 100);
 
   return (
     <div className="min-h-screen bg-background p-6 pb-24">
@@ -197,9 +211,14 @@ const Dashboard = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Overall</span>
-              <span className="text-sm font-medium">25%</span>
+              <span className="text-sm font-medium">{progressPercentage}%</span>
             </div>
-            <Progress value={25} />
+            <Progress value={progressPercentage} />
+            {!isPreview && (
+              <p className="text-xs text-muted-foreground">
+                {completedTasks} of {totalTasks} tasks completed
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -229,11 +248,13 @@ const Dashboard = () => {
                     state: { 
                       title: todayExercise.title, 
                       duration: todayExercise.duration,
-                      instructions: todayExercise.instructions 
+                      instructions: todayExercise.instructions,
+                      planId: todayExercise.planId
                     } 
                   })}
+                  disabled={dailyPlan?.is_completed_exercise}
                 >
-                  Start Exercise
+                  {dailyPlan?.is_completed_exercise ? 'Completed ✓' : 'Start Exercise'}
                 </Button>
               ) : (
                 <div className="space-y-2">
@@ -267,8 +288,19 @@ const Dashboard = () => {
                   <h3 className="font-semibold text-lg mb-2">{todayYoga.title}</h3>
                   <p className="text-sm text-muted-foreground">{todayYoga.duration}</p>
                 </div>
-                <Button className="w-full" disabled={isPreview}>
-                  Start Yoga
+                <Button 
+                  className="w-full" 
+                  disabled={isPreview || dailyPlan?.is_completed_yoga}
+                  onClick={() => !isPreview && navigate('/yoga-detail', {
+                    state: {
+                      title: todayYoga.title,
+                      duration: todayYoga.duration,
+                      instructions: todayYoga.instructions,
+                      planId: todayYoga.planId
+                    }
+                  })}
+                >
+                  {!isPreview && dailyPlan?.is_completed_yoga ? 'Completed ✓' : 'Start Yoga'}
                 </Button>
               </CardContent>
             </div>
@@ -328,9 +360,18 @@ const Dashboard = () => {
                 </div>
                 <Button 
                   className="w-full"
-                  disabled={isPreview}
+                  disabled={isPreview || dailyPlan?.is_completed_meal}
+                  onClick={() => !isPreview && navigate('/meal-detail', {
+                    state: {
+                      title: todayMeal.title,
+                      instructions: todayMeal.instructions,
+                      ingredients: todayMeal.ingredients,
+                      calories: todayMeal.calories,
+                      planId: todayMeal.planId
+                    }
+                  })}
                 >
-                  View Meal
+                  {!isPreview && dailyPlan?.is_completed_meal ? 'Completed ✓' : 'View Meal'}
                 </Button>
               </CardContent>
             </div>

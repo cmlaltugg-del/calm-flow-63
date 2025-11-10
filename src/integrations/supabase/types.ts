@@ -21,6 +21,11 @@ export type Database = {
           exercise_instructions: string | null
           exercise_title: string
           id: string
+          is_completed_exercise: boolean | null
+          is_completed_meal: boolean | null
+          is_completed_yoga: boolean | null
+          meal_calories_estimate: number | null
+          meal_ingredients: string | null
           meal_instructions: string | null
           meal_title: string
           plan_date: string
@@ -36,6 +41,11 @@ export type Database = {
           exercise_instructions?: string | null
           exercise_title: string
           id?: string
+          is_completed_exercise?: boolean | null
+          is_completed_meal?: boolean | null
+          is_completed_yoga?: boolean | null
+          meal_calories_estimate?: number | null
+          meal_ingredients?: string | null
           meal_instructions?: string | null
           meal_title: string
           plan_date?: string
@@ -51,6 +61,11 @@ export type Database = {
           exercise_instructions?: string | null
           exercise_title?: string
           id?: string
+          is_completed_exercise?: boolean | null
+          is_completed_meal?: boolean | null
+          is_completed_yoga?: boolean | null
+          meal_calories_estimate?: number | null
+          meal_ingredients?: string | null
           meal_instructions?: string | null
           meal_title?: string
           plan_date?: string

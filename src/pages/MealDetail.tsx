@@ -1,12 +1,54 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const MealDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { title, instructions } = location.state || {};
+  const { title, instructions, ingredients, calories, planId } = location.state || {};
+  const { toast } = useToast();
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleMarkEaten = async () => {
+    if (!planId) {
+      toast({
+        title: "Error",
+        description: "Unable to mark as eaten. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCompleting(true);
+    try {
+      const { error } = await supabase
+        .from('daily_plans')
+        .update({ is_completed_meal: true })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Delicious!",
+        description: "Meal marked as eaten.",
+      });
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update completion status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -22,16 +64,41 @@ const MealDetail = () => {
 
         <div className="space-y-2">
           <h1 className="text-3xl font-light text-foreground">{title || "Today's Meal"}</h1>
+          {calories && (
+            <Badge variant="secondary" className="rounded-full">
+              {calories} calories
+            </Badge>
+          )}
         </div>
 
+        {ingredients && (
+          <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
+            <h2 className="text-xl font-medium">Ingredients</h2>
+            <ul className="text-muted-foreground space-y-2">
+              {ingredients.split('\n').filter((item: string) => item.trim()).map((item: string, index: number) => (
+                <li key={index} className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>{item.trim()}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <h2 className="text-xl font-medium">Recipe & Instructions</h2>
+          <h2 className="text-xl font-medium">Instructions</h2>
           <p className="text-muted-foreground whitespace-pre-wrap">
             {instructions || "No instructions available."}
           </p>
         </Card>
 
-        <Button className="w-full rounded-full h-12">Mark as Prepared</Button>
+        <Button 
+          className="w-full rounded-full h-12"
+          onClick={handleMarkEaten}
+          disabled={isCompleting}
+        >
+          {isCompleting ? "Marking..." : "Mark as Eaten"}
+        </Button>
       </div>
     </div>
   );

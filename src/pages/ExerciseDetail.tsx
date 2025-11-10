@@ -2,11 +2,52 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const ExerciseDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { title, instructions, duration } = location.state || {};
+  const { title, instructions, duration, planId } = location.state || {};
+  const { toast } = useToast();
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleMarkComplete = async () => {
+    if (!planId) {
+      toast({
+        title: "Error",
+        description: "Unable to mark as complete. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCompleting(true);
+    try {
+      const { error } = await supabase
+        .from('daily_plans')
+        .update({ is_completed_exercise: true })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Awesome!",
+        description: "Exercise marked as complete.",
+      });
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update completion status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -32,7 +73,13 @@ const ExerciseDetail = () => {
           </p>
         </Card>
 
-        <Button className="w-full rounded-full h-12">Mark as Complete</Button>
+        <Button 
+          className="w-full rounded-full h-12"
+          onClick={handleMarkComplete}
+          disabled={isCompleting}
+        >
+          {isCompleting ? "Marking..." : "Mark as Complete"}
+        </Button>
       </div>
     </div>
   );
