@@ -66,11 +66,72 @@ const Dashboard = () => {
       }
 
       if (!profileData) {
-        console.log('No profile found, redirecting to onboarding');
+        // Try to create the profile from onboarding data if available
+        const height = sessionStorage.getItem('height');
+        const weight = sessionStorage.getItem('weight');
+        const gender = sessionStorage.getItem('gender');
+        const targetWeight = sessionStorage.getItem('targetWeight');
+        const age = sessionStorage.getItem('age');
+        const goal = sessionStorage.getItem('goal');
+        const workoutMode = sessionStorage.getItem('workoutMode');
+
+        if (height && weight && gender && targetWeight && age && goal && workoutMode) {
+          const weightNum = parseFloat(weight);
+          const heightNum = parseFloat(height);
+          const ageNum = parseInt(age);
+          const targetWeightNum = parseFloat(targetWeight);
+
+          // Calculate targets
+          let bmr;
+          if (gender === 'male') {
+            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
+          } else {
+            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+          }
+          const activityFactor = workoutMode === 'home' ? 1.45 : 1.55;
+          const tdee = bmr * activityFactor;
+          const daily_calories = Math.round(tdee - 350);
+          const protein_target = Math.round(targetWeightNum * 2);
+
+          const { data: createdProfile, error: createErr } = await supabase
+            .from('profiles')
+            .upsert({
+              user_id: user!.id,
+              height: heightNum,
+              weight: weightNum,
+              gender,
+              target_weight_kg: targetWeightNum,
+              age: ageNum,
+              goal,
+              workout_mode: workoutMode,
+              daily_calories,
+              protein_target
+            }, { onConflict: 'user_id' })
+            .select()
+            .single();
+
+          if (createErr || !createdProfile) {
+            console.error('Failed to create profile from onboarding data:', createErr);
+            toast({
+              title: 'Error creating profile',
+              description: 'Please redo onboarding.',
+              variant: 'destructive',
+            });
+            navigate('/onboarding/height-weight');
+            return;
+          }
+
+          setProfile(createdProfile);
+          // Now generate a plan
+          await generateNewPlan();
+          return;
+        }
+
+        console.log('No profile and no onboarding data, redirecting to onboarding');
         toast({
-          title: "Profile not found",
-          description: "Please complete onboarding first.",
-          variant: "destructive",
+          title: 'Profile not found',
+          description: 'Please complete onboarding first.',
+          variant: 'destructive',
         });
         navigate('/onboarding/height-weight');
         return;
