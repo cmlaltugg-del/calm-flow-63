@@ -14,6 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_plans: {
+        Row: {
+          created_at: string
+          daily_water_target_liters: number
+          exercise_instructions: string | null
+          exercise_title: string
+          id: string
+          meal_instructions: string | null
+          meal_title: string
+          plan_date: string
+          reps_or_duration: string
+          user_id: string
+          yoga_duration_minutes: number
+          yoga_instructions: string | null
+          yoga_title: string
+        }
+        Insert: {
+          created_at?: string
+          daily_water_target_liters: number
+          exercise_instructions?: string | null
+          exercise_title: string
+          id?: string
+          meal_instructions?: string | null
+          meal_title: string
+          plan_date?: string
+          reps_or_duration: string
+          user_id: string
+          yoga_duration_minutes: number
+          yoga_instructions?: string | null
+          yoga_title: string
+        }
+        Update: {
+          created_at?: string
+          daily_water_target_liters?: number
+          exercise_instructions?: string | null
+          exercise_title?: string
+          id?: string
+          meal_instructions?: string | null
+          meal_title?: string
+          plan_date?: string
+          reps_or_duration?: string
+          user_id?: string
+          yoga_duration_minutes?: number
+          yoga_instructions?: string | null
+          yoga_title?: string
+        }
+        Relationships: []
+      }
+      exercises_gym: {
+        Row: {
+          created_at: string
+          id: string
+          instructions: string | null
+          intensity_level: string | null
+          reps_or_duration: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          intensity_level?: string | null
+          reps_or_duration: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          intensity_level?: string | null
+          reps_or_duration?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      exercises_home: {
+        Row: {
+          created_at: string
+          id: string
+          instructions: string | null
+          intensity_level: string | null
+          reps_or_duration: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          intensity_level?: string | null
+          reps_or_duration: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          intensity_level?: string | null
+          reps_or_duration?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      meals: {
+        Row: {
+          calories: number | null
+          created_at: string
+          id: string
+          instructions: string | null
+          protein_focused: boolean | null
+          title: string
+        }
+        Insert: {
+          calories?: number | null
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          protein_focused?: boolean | null
+          title: string
+        }
+        Update: {
+          calories?: number | null
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          protein_focused?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          goal: string | null
+          height: number | null
+          id: string
+          user_id: string
+          weight: number | null
+          workout_mode: string | null
+        }
+        Insert: {
+          created_at?: string
+          goal?: string | null
+          height?: number | null
+          id?: string
+          user_id: string
+          weight?: number | null
+          workout_mode?: string | null
+        }
+        Update: {
+          created_at?: string
+          goal?: string | null
+          height?: number | null
+          id?: string
+          user_id?: string
+          weight?: number | null
+          workout_mode?: string | null
+        }
+        Relationships: []
+      }
       yoga_sessions: {
         Row: {
           created_at: string
