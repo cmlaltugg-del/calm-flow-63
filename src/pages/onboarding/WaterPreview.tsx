@@ -1,37 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Droplet } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 const WaterPreview = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const weight = sessionStorage.getItem("weight") || "70";
   const dailyTarget = Math.round(parseInt(weight) * 0.033 * 10) / 10;
 
   const handleContinue = () => {
-    // ✅ Onboarding tamamlandı bilgisini işaretliyoruz
     sessionStorage.setItem("onboardingComplete", "true");
-
-    // ✅ Kullanıcı login değilse → Dashboard PREVIEW modunda açılır
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        navigate("/dashboard");
-        return;
-      }
-
-      // ✅ Kullanıcı giriş yapmışsa Dashboard gerçek planı alır
-      navigate("/dashboard");
-    };
-
-    checkUser();
+    navigate("/dashboard");
   };
 
   return (
@@ -59,9 +37,8 @@ const WaterPreview = () => {
           onClick={handleContinue}
           size="lg"
           className="w-full rounded-full h-14 text-base font-medium"
-          disabled={loading}
         >
-          {loading ? "Setting up..." : "Continue to Dashboard"}
+          Continue to Dashboard
         </Button>
       </div>
     </div>

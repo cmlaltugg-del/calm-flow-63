@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Home, User, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +15,14 @@ const Settings = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({
+    height: "",
+    weight: "",
+    target_weight_kg: "",
+    gender: "",
+  });
 
   useEffect(() => {
     if (authLoading) return;
@@ -24,7 +33,70 @@ const Settings = () => {
     }
 
     setEmail(user.email || "");
+    fetchProfile();
   }, [user, authLoading, navigate]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user!.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile({
+          height: data.height?.toString() || "",
+          weight: data.weight?.toString() || "",
+          target_weight_kg: data.target_weight_kg?.toString() || "",
+          gender: data.gender || "",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          height: parseFloat(profile.height) || null,
+          weight: parseFloat(profile.weight) || null,
+          target_weight_kg: parseFloat(profile.target_weight_kg) || null,
+          gender: profile.gender || null,
+        })
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -46,7 +118,7 @@ const Settings = () => {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -82,13 +154,83 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        <Button 
-          className="w-full" 
-          variant="destructive"
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="height">Height (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                value={profile.height}
+                onChange={(e) => setProfile({ ...profile, height: e.target.value })}
+                placeholder="170"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weight">Weight (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                value={profile.weight}
+                onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
+                placeholder="70"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="target_weight">Target Weight (kg)</Label>
+              <Input
+                id="target_weight"
+                type="number"
+                value={profile.target_weight_kg}
+                onChange={(e) => setProfile({ ...profile, target_weight_kg: e.target.value })}
+                placeholder="65"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Select value={profile.gender} onValueChange={(value) => setProfile({ ...profile, gender: value })}>
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-3">
+          <Button 
+            className="w-full" 
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+
+          <Button 
+            className="w-full" 
+            variant="destructive"
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Bottom Navigation */}
