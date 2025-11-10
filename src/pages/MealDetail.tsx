@@ -86,10 +86,18 @@ const MealDetail = () => {
         )}
 
         <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <h2 className="text-xl font-medium">Instructions</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">
-            {instructions || "No instructions available."}
-          </p>
+          <h2 className="text-xl font-medium">How to Prepare</h2>
+          
+          <div className="mt-6 space-y-3">
+            {instructions?.split('.').filter((step: string) => step.trim()).map((step: string, idx: number) => (
+              <div key={idx} className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-medium">
+                  {idx + 1}
+                </div>
+                <p className="flex-1 text-muted-foreground">{step.trim()}</p>
+              </div>
+            )) || <p className="text-muted-foreground">No instructions available.</p>}
+          </div>
         </Card>
 
         <Button 

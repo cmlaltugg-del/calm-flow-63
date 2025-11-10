@@ -9,9 +9,12 @@ import { useState } from "react";
 const YogaDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { title, instructions, duration, planId } = location.state || {};
+  const { title, instructions, duration, planId, poses } = location.state || {};
   const { toast } = useToast();
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Use poses array if available, otherwise fall back to instructions
+  const posesList = poses || [{ pose_name: 'Full Session', instructions: instructions || 'No instructions available' }];
 
   const handleMarkComplete = async () => {
     if (!planId) {
@@ -63,15 +66,24 @@ const YogaDetail = () => {
 
         <div className="space-y-2">
           <h1 className="text-3xl font-light text-foreground">{title || "Yoga Session"}</h1>
-          <p className="text-muted-foreground">{duration}</p>
+          <p className="text-muted-foreground">{duration} • {posesList.length} {posesList.length === 1 ? 'pose' : 'poses'}</p>
         </div>
 
-        <Card className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-          <h2 className="text-xl font-medium">Instructions</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">
-            {instructions || "No instructions available."}
-          </p>
-        </Card>
+        <div className="space-y-4">
+          {posesList.map((pose: any, index: number) => (
+            <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                  {index + 1}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h2 className="text-lg font-medium">{pose.pose_name}</h2>
+                  <p className="text-muted-foreground">{pose.instructions}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
 
         <Button 
           className="w-full rounded-full h-12" 

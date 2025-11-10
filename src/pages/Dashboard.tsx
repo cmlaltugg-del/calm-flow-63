@@ -269,7 +269,9 @@ const Dashboard = () => {
     title: dailyPlan.exercise_title,
     duration: dailyPlan.reps_or_duration,
     instructions: dailyPlan.exercise_instructions,
-    planId: dailyPlan.id
+    planId: dailyPlan.id,
+    exercises: dailyPlan.exercises_json || [],
+    totalCalories: dailyPlan.total_exercise_calories || 0
   } : null;
 
   const todayMeal = dailyPlan ? {
@@ -284,7 +286,8 @@ const Dashboard = () => {
     title: dailyPlan.yoga_title,
     duration: `${dailyPlan.yoga_duration_minutes} min`,
     instructions: dailyPlan.yoga_instructions,
-    planId: dailyPlan.id
+    planId: dailyPlan.id,
+    poses: dailyPlan.yoga_poses_json || []
   } : null;
 
   // Calculate progress based on completed tasks
@@ -391,8 +394,11 @@ const Dashboard = () => {
               <div>
                 <h3 className="font-semibold text-lg mb-2">{todayExercise.title}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{todayExercise.duration}</p>
+                {todayExercise.totalCalories > 0 && (
+                  <Badge variant="secondary">{todayExercise.totalCalories} cal total</Badge>
+                )}
                 {isPreview && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-2">
                     {getFirstInstruction(todayExercise.instructions)}
                   </p>
                 )}
@@ -405,7 +411,9 @@ const Dashboard = () => {
                       title: todayExercise.title, 
                       duration: todayExercise.duration,
                       instructions: todayExercise.instructions,
-                      planId: todayExercise.planId
+                      planId: todayExercise.planId,
+                      exercises: todayExercise.exercises,
+                      totalCalories: todayExercise.totalCalories
                     } 
                   })}
                   disabled={dailyPlan?.is_completed_exercise}
@@ -452,7 +460,8 @@ const Dashboard = () => {
                       title: todayYoga.title,
                       duration: todayYoga.duration,
                       instructions: todayYoga.instructions,
-                      planId: todayYoga.planId
+                      planId: todayYoga.planId,
+                      poses: todayYoga.poses
                     }
                   })}
                 >

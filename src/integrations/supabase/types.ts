@@ -21,6 +21,7 @@ export type Database = {
           daily_water_target_liters: number
           exercise_instructions: string | null
           exercise_title: string
+          exercises_json: Json | null
           id: string
           is_completed_exercise: boolean | null
           is_completed_meal: boolean | null
@@ -32,9 +33,11 @@ export type Database = {
           plan_date: string
           protein_target_g: number | null
           reps_or_duration: string
+          total_exercise_calories: number | null
           user_id: string
           yoga_duration_minutes: number
           yoga_instructions: string | null
+          yoga_poses_json: Json | null
           yoga_title: string
         }
         Insert: {
@@ -43,6 +46,7 @@ export type Database = {
           daily_water_target_liters: number
           exercise_instructions?: string | null
           exercise_title: string
+          exercises_json?: Json | null
           id?: string
           is_completed_exercise?: boolean | null
           is_completed_meal?: boolean | null
@@ -54,9 +58,11 @@ export type Database = {
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration: string
+          total_exercise_calories?: number | null
           user_id: string
           yoga_duration_minutes: number
           yoga_instructions?: string | null
+          yoga_poses_json?: Json | null
           yoga_title: string
         }
         Update: {
@@ -65,6 +71,7 @@ export type Database = {
           daily_water_target_liters?: number
           exercise_instructions?: string | null
           exercise_title?: string
+          exercises_json?: Json | null
           id?: string
           is_completed_exercise?: boolean | null
           is_completed_meal?: boolean | null
@@ -76,9 +83,11 @@ export type Database = {
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration?: string
+          total_exercise_calories?: number | null
           user_id?: string
           yoga_duration_minutes?: number
           yoga_instructions?: string | null
+          yoga_poses_json?: Json | null
           yoga_title?: string
         }
         Relationships: []

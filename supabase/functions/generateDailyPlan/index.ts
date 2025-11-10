@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Select exercise based on workout mode
+    // Select 5 exercises based on workout mode
     const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
     const { data: exercises, error: exerciseError } = await supabase
       .from(exerciseTable)
@@ -95,7 +95,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    const randomExercise = exercises[Math.floor(Math.random() * exercises.length)];
+    // Pick 5 random exercises
+    const shuffled = exercises.sort(() => 0.5 - Math.random());
+    const selectedExercises = shuffled.slice(0, Math.min(5, exercises.length));
+    
+    // Calculate calories for each exercise (rough estimate: 5-8 cal/min)
+    const exercisesWithCalories = selectedExercises.map(ex => ({
+      title: ex.title,
+      instructions: ex.instructions,
+      reps_or_duration: ex.reps_or_duration,
+      calories: Math.round(Math.random() * 30 + 40) // 40-70 calories per exercise
+    }));
+    
+    const total_exercise_calories = exercisesWithCalories.reduce((sum, ex) => sum + ex.calories, 0);
+    const mainExercise = selectedExercises[0];
 
     // Select meal
     let mealsQuery = supabase.from('meals').select('*');
@@ -138,6 +151,14 @@ Deno.serve(async (req) => {
     }
 
     const randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+    
+    // Split yoga instructions into poses/steps
+    const yogaPoses = randomYoga.instructions ? 
+      randomYoga.instructions.split('.').filter((s: string) => s.trim()).map((pose: string, idx: number) => ({
+        pose_name: `Step ${idx + 1}`,
+        instructions: pose.trim()
+      })) : 
+      [{ pose_name: 'Full Session', instructions: randomYoga.title }];
 
     // Calculate targets
     const weightNum = profile.weight;
@@ -165,9 +186,11 @@ Deno.serve(async (req) => {
       .insert({
         user_id: user.id,
         plan_date: today,
-        exercise_title: randomExercise.title,
-        exercise_instructions: randomExercise.instructions,
-        reps_or_duration: randomExercise.reps_or_duration,
+        exercise_title: mainExercise.title,
+        exercise_instructions: mainExercise.instructions,
+        reps_or_duration: mainExercise.reps_or_duration,
+        exercises_json: exercisesWithCalories,
+        total_exercise_calories,
         meal_title: randomMeal.title,
         meal_instructions: randomMeal.instructions,
         meal_ingredients: randomMeal.ingredients,
@@ -175,6 +198,7 @@ Deno.serve(async (req) => {
         yoga_title: randomYoga.title,
         yoga_instructions: randomYoga.instructions,
         yoga_duration_minutes: randomYoga.duration_minutes,
+        yoga_poses_json: yogaPoses,
         daily_water_target_liters,
         calorie_target,
         protein_target_g,
