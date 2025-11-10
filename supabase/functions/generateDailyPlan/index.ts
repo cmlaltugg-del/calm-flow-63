@@ -30,20 +30,37 @@ Deno.serve(async (req) => {
 
     console.log('Generating daily plan for user:', user.id);
 
-    // Fetch user profile
+    // Fetch user profile with detailed logging
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      console.error('Profile error:', profileError);
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
       return new Response(
-        JSON.stringify({ error: 'Profile not found' }),
+        JSON.stringify({ 
+          error: 'Profile not found',
+          details: profileError.message,
+          user_id: user.id 
+        }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    if (!profile) {
+      console.error('No profile data returned for user:', user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Profile not found',
+          user_id: user.id 
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Profile found for user:', user.id, 'workout_mode:', profile.workout_mode);
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -83,7 +100,7 @@ Deno.serve(async (req) => {
     // Select meal
     let mealsQuery = supabase.from('meals').select('*');
     if (profile.goal === 'muscle_gain') {
-      mealsQuery = mealsQuery.eq('high_protein', true);
+      mealsQuery = mealsQuery.eq('protein_focused', true);
     }
     
     const { data: meals, error: mealError } = await mealsQuery.limit(50);
@@ -107,9 +124,9 @@ Deno.serve(async (req) => {
     const allowedIntensities = intensityMap[profile.goal] || ['beginner'];
     
     const { data: yogaSessions, error: yogaError } = await supabase
-      .from('yoga')
+      .from('yoga_sessions')
       .select('*')
-      .in('intensity', allowedIntensities)
+      .in('intensity_level', allowedIntensities)
       .limit(50);
 
     if (yogaError || !yogaSessions || yogaSessions.length === 0) {
@@ -154,7 +171,7 @@ Deno.serve(async (req) => {
         meal_title: randomMeal.title,
         meal_instructions: randomMeal.instructions,
         meal_ingredients: randomMeal.ingredients,
-        meal_calories_estimate: randomMeal.calories_estimate,
+        meal_calories_estimate: randomMeal.calories || 0,
         yoga_title: randomYoga.title,
         yoga_instructions: randomYoga.instructions,
         yoga_duration_minutes: randomYoga.duration_minutes,

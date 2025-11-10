@@ -94,7 +94,42 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
 
         console.log('Profile created successfully for user:', authData.user.id);
 
-        // Generate daily plan
+        // Wait a moment to ensure profile is fully committed
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Verify profile exists before generating plan
+        const { data: verifyProfile, error: verifyError } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (verifyError || !verifyProfile) {
+          console.error('Profile verification failed:', verifyError);
+          toast({
+            title: "Almost there!",
+            description: "Your account is ready. Please refresh to load your plan.",
+          });
+          onOpenChange(false);
+          navigate('/dashboard');
+          return;
+        }
+
+        console.log('Profile verified, generating daily plan...');
+
+        // Generate daily plan with proper auth
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          console.error('No session available for generateDailyPlan');
+          toast({
+            title: "Welcome!",
+            description: "Your account is ready. Your plan will load when you access the dashboard.",
+          });
+          onOpenChange(false);
+          navigate('/dashboard');
+          return;
+        }
+
         const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
         
         if (planError) {
@@ -104,6 +139,7 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
             description: "Your account is ready. Your plan will load shortly.",
           });
         } else {
+          console.log('Daily plan generated successfully');
           toast({
             title: "Welcome!",
             description: "Your personalized plan is ready.",

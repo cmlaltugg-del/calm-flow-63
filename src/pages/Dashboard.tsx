@@ -47,42 +47,31 @@ const Dashboard = () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch profile with retry logic
-      let profileData = null;
-      let attempts = 0;
-      while (!profileData && attempts < 5) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user!.id)
-          .maybeSingle();
+      // Fetch profile - it should exist by now
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user!.id)
+        .maybeSingle();
 
-        if (data) {
-          profileData = data;
-          setProfile(data);
-          break;
-        }
-        
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error);
-          break;
-        }
-        
-        attempts++;
-        if (attempts < 5) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-
-      if (!profileData) {
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
         toast({
-          title: "Profile not found",
-          description: "Please complete your profile setup.",
+          title: "Error loading profile",
+          description: "Please try refreshing the page.",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
+
+      if (!profileData) {
+        console.log('No profile found yet, will retry on next load');
+        setLoading(false);
+        return;
+      }
+
+      setProfile(profileData);
       
       // Fetch daily plan
       const { data, error } = await supabase
@@ -95,8 +84,10 @@ const Dashboard = () => {
       if (error) throw error;
 
       if (!data) {
+        console.log('No daily plan found for today, generating new plan...');
         await generateNewPlan();
       } else {
+        console.log('Daily plan loaded successfully');
         setDailyPlan(data);
         setIsPreview(false);
       }
@@ -114,10 +105,15 @@ const Dashboard = () => {
 
   const generateNewPlan = async () => {
     try {
+      console.log('Invoking generateDailyPlan edge function...');
       const { data, error } = await supabase.functions.invoke('generateDailyPlan');
       
-      if (error) throw error;
+      if (error) {
+        console.error('generateDailyPlan error:', error);
+        throw error;
+      }
       
+      console.log('Plan generated, fetching updated data...');
       await fetchDailyPlan();
     } catch (error) {
       console.error('Error generating plan:', error);
