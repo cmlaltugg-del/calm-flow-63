@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Loader2, Lock, Target, Flame, Beef, Droplets } from "lucide-react";
+import { Dumbbell, Loader2, Lock, Target, Flame, Beef, Droplets, Home, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/SignupModal";
@@ -470,6 +470,28 @@ const Dashboard = () => {
         onSignupSuccess={handleSignupSuccess}
         cardSource={signupCardSource}
       />
+
+      {/* Bottom Navigation */}
+      {!isPreview && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+          <div className="max-w-md mx-auto flex items-center justify-around py-3">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex flex-col items-center gap-1 text-primary"
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-xs">Home</span>
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-xs">Profile</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
