@@ -12,83 +12,26 @@ const WaterPreview = () => {
   const weight = sessionStorage.getItem("weight") || "70";
   const dailyTarget = Math.round(parseInt(weight) * 0.033 * 10) / 10;
 
-  const handleContinue = async () => {
-    try {
-      setLoading(true);
-      
-      const height = sessionStorage.getItem('height');
-      const weight = sessionStorage.getItem('weight');
-      const gender = sessionStorage.getItem('gender');
-      const targetWeight = sessionStorage.getItem('targetWeight');
-      const age = sessionStorage.getItem('age');
-      const goal = sessionStorage.getItem('goal');
-      const workoutMode = sessionStorage.getItem('workoutMode');
+  const handleContinue = () => {
+    // ✅ Onboarding tamamlandı bilgisini işaretliyoruz
+    sessionStorage.setItem("onboardingComplete", "true");
 
-      if (!height || !weight || !gender || !targetWeight || !age || !goal || !workoutMode) {
-        toast({
-          title: "Missing information",
-          description: "Please complete all onboarding steps",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
+    // ✅ Kullanıcı login değilse → Dashboard PREVIEW modunda açılır
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign up to continue",
-          variant: "destructive",
-        });
-        navigate('/');
+        navigate("/dashboard");
         return;
       }
 
-      // Save profile to database
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          height: parseFloat(height),
-          weight: parseFloat(weight),
-          gender: gender,
-          target_weight_kg: parseFloat(targetWeight),
-          age: parseInt(age),
-          goal: goal,
-          workout_mode: workoutMode,
-        });
+      // ✅ Kullanıcı giriş yapmışsa Dashboard gerçek planı alır
+      navigate("/dashboard");
+    };
 
-      if (profileError) {
-        console.error('Profile save error:', profileError);
-        throw profileError;
-      }
-
-      // Generate daily plan
-      const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
-
-      if (planError) {
-        console.error('Plan generation error:', planError);
-        throw planError;
-      }
-
-      toast({
-        title: "Success!",
-        description: "Your personalized plan is ready",
-      });
-
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error in onboarding completion:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    checkUser();
   };
 
   return (
@@ -108,9 +51,7 @@ const WaterPreview = () => {
               <div className="text-5xl font-light text-primary">{dailyTarget}L</div>
               <div className="text-sm text-muted-foreground">per day</div>
             </div>
-            <p className="text-sm text-muted-foreground pt-4">
-              Stay hydrated throughout the day with gentle reminders
-            </p>
+            <p className="text-sm text-muted-foreground pt-4">Stay hydrated throughout the day with gentle reminders</p>
           </div>
         </div>
 
