@@ -70,7 +70,7 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         const protein_target = Math.round(targetWeightNum * 2);
 
         // Create profile with onboarding data
-        const { error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .upsert({
             user_id: authData.user.id,
@@ -85,11 +85,14 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
             protein_target
           }, {
             onConflict: 'user_id'
-          });
+          })
+          .select()
+          .single();
 
-        if (profileError) {
+        if (profileError || !profileData) {
           console.error('Profile creation error:', profileError);
-          throw new Error('Failed to save your profile');
+          await supabase.auth.signOut();
+          throw new Error('Failed to save your profile. Please try again.');
         }
 
         console.log('Profile created successfully for user:', authData.user.id);

@@ -66,8 +66,13 @@ const Dashboard = () => {
       }
 
       if (!profileData) {
-        console.log('No profile found yet, will retry on next load');
-        setLoading(false);
+        console.log('No profile found, redirecting to onboarding');
+        toast({
+          title: "Profile not found",
+          description: "Please complete onboarding first.",
+          variant: "destructive",
+        });
+        navigate('/onboarding/height-weight');
         return;
       }
 
