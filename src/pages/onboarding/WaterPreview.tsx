@@ -9,28 +9,40 @@ const WaterPreview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const weight = localStorage.getItem("userWeight") || "70";
+  const weight = sessionStorage.getItem("weight") || "70";
   const dailyTarget = Math.round(parseInt(weight) * 0.033 * 10) / 10;
 
   const handleContinue = async () => {
-    setLoading(true);
-    
     try {
-      // Get onboarding data from localStorage
-      const height = localStorage.getItem("userHeight");
-      const goal = localStorage.getItem("userGoal");
-      const workoutMode = localStorage.getItem("userWorkoutMode");
+      setLoading(true);
+      
+      const height = sessionStorage.getItem('height');
+      const weight = sessionStorage.getItem('weight');
+      const gender = sessionStorage.getItem('gender');
+      const targetWeight = sessionStorage.getItem('targetWeight');
+      const age = sessionStorage.getItem('age');
+      const goal = sessionStorage.getItem('goal');
+      const workoutMode = sessionStorage.getItem('workoutMode');
+
+      if (!height || !weight || !gender || !targetWeight || !age || !goal || !workoutMode) {
+        toast({
+          title: "Missing information",
+          description: "Please complete all onboarding steps",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
-        // User not authenticated - skip backend save for now
         toast({
-          title: "Notice",
-          description: "Please sign in to save your profile and generate personalized plans.",
+          title: "Authentication required",
+          description: "Please sign up to continue",
+          variant: "destructive",
         });
-        navigate("/dashboard");
+        navigate('/');
         return;
       }
 
@@ -39,36 +51,39 @@ const WaterPreview = () => {
         .from('profiles')
         .upsert({
           user_id: user.id,
-          height: parseFloat(height || "170"),
+          height: parseFloat(height),
           weight: parseFloat(weight),
+          gender: gender,
+          target_weight_kg: parseFloat(targetWeight),
+          age: parseInt(age),
           goal: goal,
           workout_mode: workoutMode,
         });
 
       if (profileError) {
-        console.error('Error saving profile:', profileError);
+        console.error('Profile save error:', profileError);
         throw profileError;
       }
 
-      // Call generateDailyPlan edge function
+      // Generate daily plan
       const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
 
       if (planError) {
-        console.error('Error generating daily plan:', planError);
+        console.error('Plan generation error:', planError);
         throw planError;
       }
 
       toast({
         title: "Success!",
-        description: "Your personalized wellness plan is ready.",
+        description: "Your personalized plan is ready",
       });
 
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Error during onboarding completion:', error);
+      console.error('Error in onboarding completion:', error);
       toast({
         title: "Error",
-        description: "Failed to complete setup. Please try again.",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

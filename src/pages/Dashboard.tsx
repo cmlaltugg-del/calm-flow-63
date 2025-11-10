@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Dumbbell, Loader2, Lock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Dumbbell, Loader2, Lock, Target, Flame, Beef, Droplets } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/SignupModal";
@@ -103,11 +104,18 @@ const Dashboard = () => {
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
 
+      const gender = sessionStorage.getItem('gender');
+      const targetWeight = sessionStorage.getItem('targetWeight');
+      const age = sessionStorage.getItem('age');
+
       const { data, error } = await supabase.functions.invoke('generatePreviewPlan', {
         body: {
           profile: {
             height: parseFloat(height || '170'),
             weight: parseFloat(weight || '70'),
+            gender: gender || 'male',
+            target_weight_kg: parseFloat(targetWeight || '70'),
+            age: parseInt(age || '30'),
             goal: goal || 'maintain',
             workout_mode: workoutMode || 'home'
           }
@@ -218,6 +226,63 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {completedTasks} of {totalTasks} tasks completed
               </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Targets Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Your Targets
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Target className="h-4 w-4" />
+                  <span>Target Weight</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  {dailyPlan?.target_weight_kg || sessionStorage.getItem('targetWeight') || '—'} kg
+                </p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Flame className="h-4 w-4" />
+                  <span>Daily Calories</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  {dailyPlan?.calorie_target || '—'} kcal
+                </p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Beef className="h-4 w-4" />
+                  <span>Protein Target</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  {dailyPlan?.protein_target_g || '—'} g
+                </p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Droplets className="h-4 w-4" />
+                  <span>Water Target</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  {dailyWaterTarget} L
+                </p>
+              </div>
+            </div>
+            {dailyPlan?.calorie_target && dailyPlan?.meal_calories_estimate && (
+              <div className="pt-2 border-t border-border">
+                <Badge variant="secondary" className="w-full justify-center py-2">
+                  Today's Net: {-dailyPlan.meal_calories_estimate} kcal vs Target {dailyPlan.calorie_target} kcal
+                </Badge>
+              </div>
             )}
           </CardContent>
         </Card>

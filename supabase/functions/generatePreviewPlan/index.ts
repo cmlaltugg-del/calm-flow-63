@@ -62,8 +62,42 @@ Deno.serve(async (req) => {
 
     const randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
 
+    const weight = profile.weight || 70;
+    const height = profile.height || 170;
+    const age = profile.age || 30;
+    const gender = profile.gender || 'male';
+    const targetWeight = profile.target_weight_kg || weight;
+    const goal = profile.goal || 'maintain';
+    const workout_mode = profile.workout_mode || 'home';
+
+    // Calculate BMR
+    let bmr;
+    if (gender === 'male') {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+
+    // Activity factor and TDEE
+    const activityFactor = workout_mode === 'gym' ? 1.55 : 1.45;
+    const tdee = Math.round(bmr * activityFactor);
+
+    // Calorie target based on goal
+    let calorieTarget;
+    if (goal === 'lose_weight') {
+      calorieTarget = tdee - 500;
+    } else if (goal === 'gain_muscle') {
+      calorieTarget = tdee + 250;
+    } else {
+      calorieTarget = tdee;
+    }
+    calorieTarget = Math.max(calorieTarget, 1200);
+
+    // Protein target
+    const proteinTarget = Math.round(1.8 * targetWeight);
+
     // Calculate water target
-    const dailyWaterTarget = (profile.weight * 0.033).toFixed(1);
+    const dailyWaterTarget = (weight * 0.033).toFixed(1);
 
     const plan = {
       exercise_title: randomExercise.title,
@@ -76,7 +110,9 @@ Deno.serve(async (req) => {
       yoga_title: randomYoga.title,
       yoga_instructions: randomYoga.instructions,
       yoga_duration_minutes: randomYoga.duration_minutes,
-      daily_water_target_liters: parseFloat(dailyWaterTarget)
+      daily_water_target_liters: parseFloat(dailyWaterTarget),
+      calorie_target: calorieTarget,
+      protein_target_g: proteinTarget,
     };
 
     console.log('Generated preview plan:', plan);

@@ -40,6 +40,9 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       // Get onboarding data from session storage
       const height = sessionStorage.getItem('height');
       const weight = sessionStorage.getItem('weight');
+      const gender = sessionStorage.getItem('gender');
+      const targetWeight = sessionStorage.getItem('targetWeight');
+      const age = sessionStorage.getItem('age');
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
 
@@ -52,7 +55,7 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         throw new Error('Authentication failed. Please try again.');
       }
 
-      if (height && weight && goal && workoutMode) {
+      if (height && weight && gender && targetWeight && age && goal && workoutMode) {
         // Upsert profile with onboarding data
         const { error: profileError } = await supabase
           .from('profiles')
@@ -60,6 +63,9 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
             user_id: user.id,
             height: parseFloat(height),
             weight: parseFloat(weight),
+            gender: gender,
+            target_weight_kg: parseFloat(targetWeight),
+            age: parseInt(age),
             goal,
             workout_mode: workoutMode
           }, {
@@ -110,6 +116,9 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       // Clear onboarding data from session
       sessionStorage.removeItem('height');
       sessionStorage.removeItem('weight');
+      sessionStorage.removeItem('gender');
+      sessionStorage.removeItem('targetWeight');
+      sessionStorage.removeItem('age');
       sessionStorage.removeItem('goal');
       sessionStorage.removeItem('workoutMode');
       sessionStorage.removeItem('onboardingComplete');

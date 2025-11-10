@@ -54,6 +54,47 @@ Deno.serve(async (req) => {
 
     console.log('Profile:', profile);
 
+    // Calculate BMR (Basal Metabolic Rate)
+    const age = profile.age || 30;
+    const gender = profile.gender || 'male';
+    const height = profile.height || 170;
+    const weight = profile.weight || 70;
+    const targetWeight = profile.target_weight_kg || weight;
+
+    let bmr;
+    if (gender === 'male') {
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+
+    // Activity factor based on workout mode
+    const activityFactor = profile.workout_mode === 'gym' ? 1.55 : 1.45;
+    const tdee = Math.round(bmr * activityFactor);
+
+    // Calculate calorie target based on goal
+    let calorieTarget;
+    if (profile.goal === 'lose_weight') {
+      calorieTarget = tdee - 500;
+    } else if (profile.goal === 'gain_muscle') {
+      calorieTarget = tdee + 250;
+    } else {
+      calorieTarget = tdee;
+    }
+    
+    // Ensure minimum safe calorie intake
+    calorieTarget = Math.max(calorieTarget, 1200);
+
+    // Calculate protein target (1.8g per kg of target weight)
+    const proteinTarget = Math.round(1.8 * targetWeight);
+
+    console.log('Calculated targets:', {
+      bmr,
+      tdee,
+      calorieTarget,
+      proteinTarget,
+    });
+
     // Select exercise based on workout mode
     let exercise;
     if (profile.workout_mode === 'home') {
@@ -146,6 +187,8 @@ Deno.serve(async (req) => {
         yoga_instructions: yoga.instructions,
         yoga_duration_minutes: yoga.duration_minutes,
         daily_water_target_liters: dailyWaterTarget,
+        calorie_target: calorieTarget,
+        protein_target_g: proteinTarget,
         is_completed_exercise: false,
         is_completed_yoga: false,
         is_completed_meal: false,

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       daily_plans: {
         Row: {
+          calorie_target: number | null
           created_at: string
           daily_water_target_liters: number
           exercise_instructions: string | null
@@ -29,6 +30,7 @@ export type Database = {
           meal_instructions: string | null
           meal_title: string
           plan_date: string
+          protein_target_g: number | null
           reps_or_duration: string
           user_id: string
           yoga_duration_minutes: number
@@ -36,6 +38,7 @@ export type Database = {
           yoga_title: string
         }
         Insert: {
+          calorie_target?: number | null
           created_at?: string
           daily_water_target_liters: number
           exercise_instructions?: string | null
@@ -49,6 +52,7 @@ export type Database = {
           meal_instructions?: string | null
           meal_title: string
           plan_date?: string
+          protein_target_g?: number | null
           reps_or_duration: string
           user_id: string
           yoga_duration_minutes: number
@@ -56,6 +60,7 @@ export type Database = {
           yoga_title: string
         }
         Update: {
+          calorie_target?: number | null
           created_at?: string
           daily_water_target_liters?: number
           exercise_instructions?: string | null
@@ -69,6 +74,7 @@ export type Database = {
           meal_instructions?: string | null
           meal_title?: string
           plan_date?: string
+          protein_target_g?: number | null
           reps_or_duration?: string
           user_id?: string
           yoga_duration_minutes?: number
@@ -166,28 +172,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           created_at: string
+          gender: string | null
           goal: string | null
           height: number | null
           id: string
+          target_weight_kg: number | null
           user_id: string
           weight: number | null
           workout_mode: string | null
         }
         Insert: {
+          age?: number | null
           created_at?: string
+          gender?: string | null
           goal?: string | null
           height?: number | null
           id?: string
+          target_weight_kg?: number | null
           user_id: string
           weight?: number | null
           workout_mode?: string | null
         }
         Update: {
+          age?: number | null
           created_at?: string
+          gender?: string | null
           goal?: string | null
           height?: number | null
           id?: string
+          target_weight_kg?: number | null
           user_id?: string
           weight?: number | null
           workout_mode?: string | null

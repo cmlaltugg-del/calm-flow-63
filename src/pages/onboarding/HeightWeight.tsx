@@ -12,7 +12,7 @@ const HeightWeight = () => {
   const handleContinue = () => {
     sessionStorage.setItem("height", height);
     sessionStorage.setItem("weight", weight);
-    navigate("/onboarding/goals");
+    navigate("/onboarding/gender");
   };
 
   const isValid = height && weight;
