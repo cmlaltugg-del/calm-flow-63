@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
     // Select meal
     let mealsQuery = supabase.from('meals').select('*');
-    if (profile.goal === 'muscle_gain') {
+    if (profile.goal === 'gain_muscle') {
       mealsQuery = mealsQuery.eq('protein_focused', true);
     }
     
@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
 
     // Select yoga based on goal intensity
     const intensityMap: Record<string, string[]> = {
-      weight_loss: ['beginner', 'intermediate'],
-      muscle_gain: ['intermediate', 'advanced'],
+      lose_weight: ['beginner', 'intermediate'],
+      gain_muscle: ['intermediate', 'advanced'],
       maintain: ['beginner', 'intermediate'],
     };
     const allowedIntensities = intensityMap[profile.goal] || ['beginner'];
