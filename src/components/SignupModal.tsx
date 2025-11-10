@@ -108,30 +108,31 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
           throw new Error('Failed to save your profile');
         }
 
-        // Wait a bit more to ensure profile is committed
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Generate daily plan
-        try {
-          const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
+        // Verify profile was created by fetching it back
+        let profileVerified = false;
+        for (let i = 0; i < 3; i++) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
           
-          if (planError) {
-            console.error('Daily plan generation failed:', planError);
-            toast({
-              title: "Almost there!",
-              description: "Your account is ready. Your plan will be generated when you reach the dashboard.",
-            });
-          } else {
-            toast({
-              title: "Welcome!",
-              description: "Your personalized plan is ready.",
-            });
+          if (verifyProfile) {
+            profileVerified = true;
+            break;
           }
-        } catch (planError: any) {
-          console.error('Daily plan generation error:', planError);
+        }
+
+        if (!profileVerified) {
           toast({
             title: "Almost there!",
-            description: "Your account is ready. Your plan will be generated when you reach the dashboard.",
+            description: "Your account is ready. Refresh the page to continue.",
+          });
+        } else {
+          toast({
+            title: "Welcome!",
+            description: "Your account is ready.",
           });
         }
       }

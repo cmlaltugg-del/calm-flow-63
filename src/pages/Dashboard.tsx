@@ -47,17 +47,41 @@ const Dashboard = () => {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user!.id)
-        .single();
+      // Fetch profile with retry logic
+      let profileData = null;
+      let attempts = 0;
+      while (!profileData && attempts < 5) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user!.id)
+          .maybeSingle();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-      } else {
-        setProfile(profileData);
+        if (data) {
+          profileData = data;
+          setProfile(data);
+          break;
+        }
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+          break;
+        }
+        
+        attempts++;
+        if (attempts < 5) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      if (!profileData) {
+        toast({
+          title: "Profile not found",
+          description: "Please complete your profile setup.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
       
       // Fetch daily plan
