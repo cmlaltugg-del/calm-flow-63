@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Home, User } from "lucide-react";
+import { Loader2, Home, User, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -294,6 +294,13 @@ const Profile = () => {
           >
             <User className="h-5 w-5" />
             <span className="text-xs">Profile</span>
+          </button>
+          <button
+            onClick={() => navigate('/settings')}
+            className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Settings className="h-5 w-5" />
+            <span className="text-xs">Settings</span>
           </button>
         </div>
       </div>
