@@ -220,6 +220,10 @@ const Dashboard = () => {
       const targetWeight = sessionStorage.getItem('targetWeight');
       const age = sessionStorage.getItem('age');
 
+      const trainingStylesStr = sessionStorage.getItem('trainingStyles');
+      const intensity = sessionStorage.getItem('intensity');
+      const trainingStyles = trainingStylesStr ? JSON.parse(trainingStylesStr) : [];
+
       const { data, error } = await supabase.functions.invoke('generatePreviewPlan', {
         body: {
           profile: {
@@ -229,7 +233,9 @@ const Dashboard = () => {
             target_weight_kg: parseFloat(targetWeight || '70'),
             age: parseInt(age || '30'),
             goal: goal || 'maintain',
-            workout_mode: workoutMode || 'home'
+            workout_mode: workoutMode || 'home',
+            training_styles: trainingStyles,
+            intensity: intensity || 'medium'
           }
         }
       });
