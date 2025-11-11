@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
         .from('yoga_sessions')
         .select('*')
         .eq('intensity_level', intensity)
+        .gte('duration_minutes', 20)
+        .lte('duration_minutes', 35)
         .limit(50);
 
       if (yogaError) throw yogaError;
@@ -65,7 +67,39 @@ Deno.serve(async (req) => {
         randomPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
       }
     }
-    // CASE 3: Gym (with or without yoga/pilates)
+    // CASE 3: Yoga + Pilates (no gym)
+    else if (hasYoga && hasPilates && !hasGym) {
+      const intensity = profile.intensity || 'medium';
+      const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
+      const level = levelMap[intensity];
+
+      // Get 15 min yoga warmup
+      const { data: yogaSessions, error: yogaError } = await supabase
+        .from('yoga_sessions')
+        .select('*')
+        .eq('intensity_level', intensity)
+        .gte('duration_minutes', 12)
+        .lte('duration_minutes', 18)
+        .limit(50);
+
+      if (!yogaError && yogaSessions && yogaSessions.length > 0) {
+        randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+      }
+
+      // Get 15 min pilates core
+      const { data: pilatesExercises, error: pilatesError } = await supabase
+        .from('pilates_exercises')
+        .select('*')
+        .eq('level', level)
+        .gte('duration_minutes', 12)
+        .lte('duration_minutes', 18)
+        .limit(50);
+
+      if (!pilatesError && pilatesExercises && pilatesExercises.length > 0) {
+        randomPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
+      }
+    }
+    // CASE 4: Gym (with or without yoga/pilates)
     else if (hasGym) {
       const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
       const { data: exercises, error: exerciseError } = await supabase
@@ -90,21 +124,7 @@ Deno.serve(async (req) => {
         randomMeal = meals[Math.floor(Math.random() * meals.length)];
       }
 
-      // Yoga cooldown for gym users
-      if (hasYoga) {
-        const { data: yogaSessions, error: yogaError } = await supabase
-          .from('yoga_sessions')
-          .select('*')
-          .gte('duration_minutes', 3)
-          .lte('duration_minutes', 5)
-          .limit(50);
-
-        if (!yogaError && yogaSessions && yogaSessions.length > 0) {
-          randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
-        }
-      }
-
-      // Pilates core for gym users
+      // Pilates core finisher for gym users (8 min)
       if (hasPilates) {
         const intensity = profile.intensity || 'medium';
         const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
@@ -114,12 +134,26 @@ Deno.serve(async (req) => {
           .from('pilates_exercises')
           .select('*')
           .eq('level', level)
-          .gte('duration_minutes', 5)
+          .gte('duration_minutes', 6)
           .lte('duration_minutes', 10)
           .limit(50);
 
         if (!pilatesError && pilatesExercises && pilatesExercises.length > 0) {
           randomPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
+        }
+      }
+
+      // Yoga cooldown for gym users (5-8 min)
+      if (hasYoga) {
+        const { data: yogaSessions, error: yogaError } = await supabase
+          .from('yoga_sessions')
+          .select('*')
+          .gte('duration_minutes', 5)
+          .lte('duration_minutes', 8)
+          .limit(50);
+
+        if (!yogaError && yogaSessions && yogaSessions.length > 0) {
+          randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
         }
       }
     }
@@ -172,13 +206,29 @@ Deno.serve(async (req) => {
 
     // Add exercise data
     if (randomExercise) {
-      plan.exercise_title = randomExercise.title;
-      plan.exercise_instructions = randomExercise.instructions;
+      let exerciseTitle = randomExercise.title;
+      let exerciseInstructions = randomExercise.instructions;
+      
+      // If gym + pilates, combine in exercise section
+      if (hasGym && hasPilates && randomPilates) {
+        exerciseTitle = `${randomExercise.title} + ${randomPilates.title} (Core Finisher)`;
+        exerciseInstructions = `${randomExercise.instructions}\n\n--- PILATES CORE FINISHER (${randomPilates.duration_minutes} min) ---\n${randomPilates.instructions}`;
+      }
+      
+      plan.exercise_title = exerciseTitle;
+      plan.exercise_instructions = exerciseInstructions;
       plan.reps_or_duration = randomExercise.reps_or_duration;
-    } else if (randomPilates) {
-      plan.exercise_title = randomPilates.title;
-      plan.exercise_instructions = randomPilates.instructions;
-      plan.reps_or_duration = `${randomPilates.duration_minutes} minutes`;
+    } else if (randomPilates && !hasGym) {
+      // For pilates-only or yoga+pilates
+      if (hasYoga && randomYoga) {
+        plan.exercise_title = `Yoga Warmup + Pilates Core`;
+        plan.exercise_instructions = `Start with 15 min yoga warmup, then transition to 15 min pilates core work.`;
+        plan.reps_or_duration = `${(randomYoga.duration_minutes || 15) + (randomPilates.duration_minutes || 15)} minutes total`;
+      } else {
+        plan.exercise_title = randomPilates.title;
+        plan.exercise_instructions = randomPilates.instructions;
+        plan.reps_or_duration = `${randomPilates.duration_minutes} minutes`;
+      }
     }
 
     // Add meal data (only for gym users)
@@ -191,7 +241,22 @@ Deno.serve(async (req) => {
 
     // Add yoga data
     if (randomYoga) {
-      plan.yoga_title = randomYoga.title;
+      let yogaTitle = randomYoga.title;
+      
+      // For gym + yoga, label as cooldown
+      if (hasGym && randomYoga.duration_minutes <= 8) {
+        yogaTitle = `${randomYoga.title} (Cooldown)`;
+      }
+      // For yoga-only, use main session
+      else if (hasYoga && !hasGym && !hasPilates) {
+        yogaTitle = randomYoga.title;
+      }
+      // For yoga+pilates without gym, yoga is part of combined workout
+      else if (hasYoga && hasPilates && !hasGym) {
+        yogaTitle = `${randomYoga.title} (Warmup)`;
+      }
+      
+      plan.yoga_title = yogaTitle;
       plan.yoga_instructions = randomYoga.instructions;
       plan.yoga_duration_minutes = randomYoga.duration_minutes;
     }
