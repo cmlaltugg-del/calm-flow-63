@@ -152,23 +152,26 @@ Deno.serve(async (req) => {
       mainExercise.reps_or_duration = `${mainExercise.duration_minutes} minutes`;
     }
 
-    // Select meal
-    let mealsQuery = supabase.from('meals').select('*');
-    if (profile.goal === 'gain_muscle') {
-      mealsQuery = mealsQuery.eq('protein_focused', true);
-    }
-    
-    const { data: meals, error: mealError } = await mealsQuery.limit(50);
+    // Select meal (only for gym users)
+    let randomMeal: any = null;
+    if (hasGym) {
+      let mealsQuery = supabase.from('meals').select('*');
+      if (profile.goal === 'gain_muscle') {
+        mealsQuery = mealsQuery.eq('protein_focused', true);
+      }
+      
+      const { data: meals, error: mealError } = await mealsQuery.limit(50);
 
-    if (mealError || !meals || meals.length === 0) {
-      console.error('Meal fetch error:', mealError);
-      return new Response(
-        JSON.stringify({ error: 'No meals available' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      if (mealError || !meals || meals.length === 0) {
+        console.error('Meal fetch error:', mealError);
+        return new Response(
+          JSON.stringify({ error: 'No meals available' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const randomMeal = meals[Math.floor(Math.random() * meals.length)];
+      randomMeal = meals[Math.floor(Math.random() * meals.length)];
+    }
 
     // Select yoga based on training styles and intensity
     let randomYoga: any = null;
@@ -242,11 +245,15 @@ Deno.serve(async (req) => {
       user_id: user.id,
       plan_date: today,
       daily_water_target_liters,
-      meal_title: randomMeal.title,
-      meal_instructions: randomMeal.instructions,
-      meal_ingredients: randomMeal.ingredients,
-      meal_calories_estimate: randomMeal.calories || 0,
     };
+
+    // Add meal data if available (gym users)
+    if (randomMeal) {
+      planData.meal_title = randomMeal.title;
+      planData.meal_instructions = randomMeal.instructions;
+      planData.meal_ingredients = randomMeal.ingredients;
+      planData.meal_calories_estimate = randomMeal.calories || 0;
+    }
 
     // Add exercise data if available
     if (mainExercise) {

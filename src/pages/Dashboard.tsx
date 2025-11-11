@@ -80,33 +80,47 @@ const Dashboard = () => {
           const heightNum = parseFloat(height);
           const ageNum = parseInt(age);
           const targetWeightNum = parseFloat(targetWeight);
+          const trainingStylesStr = sessionStorage.getItem('trainingStyles');
+          const intensity = sessionStorage.getItem('intensity');
+          const trainingStyles = trainingStylesStr ? JSON.parse(trainingStylesStr) : [];
+          const hasGym = trainingStyles.includes('gym');
 
-          // Calculate targets
-          let bmr;
-          if (gender === 'male') {
-            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
+          // Prepare profile data
+          const profileDataToInsert: any = {
+            user_id: user!.id,
+            training_styles: trainingStyles,
+          };
+
+          // Only add gym-related data if gym is selected
+          if (hasGym) {
+            // Calculate targets
+            let bmr;
+            if (gender === 'male') {
+              bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
+            } else {
+              bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+            }
+            const activityFactor = workoutMode === 'home' ? 1.45 : 1.55;
+            const tdee = bmr * activityFactor;
+            const daily_calories = Math.round(tdee - 350);
+            const protein_target = Math.round(targetWeightNum * 2);
+
+            profileDataToInsert.height = heightNum;
+            profileDataToInsert.weight = weightNum;
+            profileDataToInsert.gender = gender;
+            profileDataToInsert.target_weight_kg = targetWeightNum;
+            profileDataToInsert.age = ageNum;
+            profileDataToInsert.goal = goal;
+            profileDataToInsert.workout_mode = workoutMode;
+            profileDataToInsert.daily_calories = daily_calories;
+            profileDataToInsert.protein_target = protein_target;
           } else {
-            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+            profileDataToInsert.intensity = intensity;
           }
-          const activityFactor = workoutMode === 'home' ? 1.45 : 1.55;
-          const tdee = bmr * activityFactor;
-          const daily_calories = Math.round(tdee - 350);
-          const protein_target = Math.round(targetWeightNum * 2);
 
           const { data: createdProfile, error: createErr } = await supabase
             .from('profiles')
-            .upsert({
-              user_id: user!.id,
-              height: heightNum,
-              weight: weightNum,
-              gender,
-              target_weight_kg: targetWeightNum,
-              age: ageNum,
-              goal,
-              workout_mode: workoutMode,
-              daily_calories,
-              protein_target
-            }, { onConflict: 'user_id' })
+            .upsert(profileDataToInsert, { onConflict: 'user_id' })
             .select()
             .single();
 
@@ -290,6 +304,12 @@ const Dashboard = () => {
     poses: dailyPlan.yoga_poses_json || []
   } : null;
 
+  // Check user's training styles
+  const trainingStyles = profile?.training_styles || [];
+  const hasGym = trainingStyles.includes('gym');
+  const hasYoga = trainingStyles.includes('yoga');
+  const hasPilates = trainingStyles.includes('pilates');
+
   // Calculate progress based on completed tasks
   const completedTasks = isPreview ? 0 : (
     (dailyPlan?.is_completed_exercise ? 1 : 0) +
@@ -331,58 +351,60 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Targets Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Your Targets
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Target className="h-4 w-4" />
-                  <span>Target Weight</span>
+        {/* Targets Card - Only show for gym users */}
+        {hasGym && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Your Targets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Target className="h-4 w-4" />
+                    <span>Target Weight</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {(isPreview ? sessionStorage.getItem('targetWeight') : profile?.target_weight_kg) || '—'} kg
+                  </p>
                 </div>
-                <p className="text-2xl font-bold">
-                  {(isPreview ? sessionStorage.getItem('targetWeight') : profile?.target_weight_kg) || '—'} kg
-                </p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Flame className="h-4 w-4" />
-                  <span>Daily Calories</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Flame className="h-4 w-4" />
+                    <span>Daily Calories</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {(isPreview ? dailyPlan?.calorie_target : profile?.daily_calories) || '—'} kcal
+                  </p>
                 </div>
-                <p className="text-2xl font-bold">
-                  {(isPreview ? dailyPlan?.calorie_target : profile?.daily_calories) || '—'} kcal
-                </p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Beef className="h-4 w-4" />
-                  <span>Protein Target</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Beef className="h-4 w-4" />
+                    <span>Protein Target</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {(isPreview ? dailyPlan?.protein_target_g : profile?.protein_target) || '—'} g
+                  </p>
                 </div>
-                <p className="text-2xl font-bold">
-                  {(isPreview ? dailyPlan?.protein_target_g : profile?.protein_target) || '—'} g
-                </p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Droplets className="h-4 w-4" />
-                  <span>Water Target</span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Droplets className="h-4 w-4" />
+                    <span>Water Target</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {dailyWaterTarget} L
+                  </p>
                 </div>
-                <p className="text-2xl font-bold">
-                  {dailyWaterTarget} L
-                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Today's Exercise */}
-        {todayExercise && (
+        {/* Today's Exercise - Show if gym or pilates selected */}
+        {todayExercise && (hasGym || hasPilates) && (
           <Card className="relative">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -432,8 +454,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Yoga - LOCKED */}
-        {todayYoga && (
+        {/* Today's Yoga - Show if yoga selected */}
+        {todayYoga && hasYoga && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
@@ -504,8 +526,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Today's Meal - LOCKED */}
-        {todayMeal && (
+        {/* Today's Meal - Show only for gym users */}
+        {todayMeal && hasGym && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
