@@ -17,7 +17,7 @@ const Welcome = () => {
         </div>
         
         <Button 
-          onClick={() => navigate("/onboarding/height-weight")}
+          onClick={() => navigate("/onboarding/training-style")}
           size="lg"
           className="w-full max-w-xs rounded-full h-14 text-base font-medium shadow-wellness"
         >

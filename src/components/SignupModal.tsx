@@ -43,9 +43,20 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       const age = sessionStorage.getItem('age');
       const goal = sessionStorage.getItem('goal');
       const workoutMode = sessionStorage.getItem('workoutMode');
+      const trainingStylesStr = sessionStorage.getItem('trainingStyles');
+      const intensity = sessionStorage.getItem('intensity');
+      
+      const trainingStyles = trainingStylesStr ? JSON.parse(trainingStylesStr) : [];
+      const hasGym = trainingStyles.includes('gym');
 
-      if (height && weight && gender && targetWeight && age && goal && workoutMode) {
-        // Calculate BMR, TDEE, and targets
+      // Prepare profile data
+      const profileData: any = {
+        user_id: authData.user.id,
+        training_styles: trainingStyles,
+      };
+
+      // Only add gym-related data if gym is selected
+      if (hasGym && height && weight && gender && targetWeight && age && goal && workoutMode) {
         const weightNum = parseFloat(weight);
         const heightNum = parseFloat(height);
         const ageNum = parseInt(age);
@@ -69,85 +80,87 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         // Protein target
         const protein_target = Math.round(targetWeightNum * 2);
 
-        // Create profile with onboarding data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            user_id: authData.user.id,
-            height: heightNum,
-            weight: weightNum,
-            gender: gender,
-            target_weight_kg: targetWeightNum,
-            age: ageNum,
-            goal,
-            workout_mode: workoutMode,
-            daily_calories,
-            protein_target
-          }, {
-            onConflict: 'user_id'
-          })
-          .select()
-          .single();
+        profileData.height = heightNum;
+        profileData.weight = weightNum;
+        profileData.gender = gender;
+        profileData.target_weight_kg = targetWeightNum;
+        profileData.age = ageNum;
+        profileData.goal = goal;
+        profileData.workout_mode = workoutMode;
+        profileData.daily_calories = daily_calories;
+        profileData.protein_target = protein_target;
+      } else {
+        // For pilates/yoga only users, just save intensity
+        profileData.intensity = intensity;
+      }
 
-        if (profileError || !profileData) {
-          console.error('Profile creation error:', profileError);
-          await supabase.auth.signOut();
-          throw new Error('Failed to save your profile. Please try again.');
-        }
+      // Create profile with onboarding data
+      const { data: createdProfile, error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData, {
+          onConflict: 'user_id'
+        })
+        .select()
+        .single();
 
-        console.log('Profile created successfully for user:', authData.user.id);
+      if (profileError || !createdProfile) {
+        console.error('Profile creation error:', profileError);
+        await supabase.auth.signOut();
+        throw new Error('Failed to save your profile. Please try again.');
+      }
 
-        // Wait a moment to ensure profile is fully committed
-        await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('Profile created successfully for user:', authData.user.id);
 
-        // Verify profile exists before generating plan
-        const { data: verifyProfile, error: verifyError } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('user_id', authData.user.id)
-          .single();
+      // Wait a moment to ensure profile is fully committed
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (verifyError || !verifyProfile) {
-          console.error('Profile verification failed:', verifyError);
-          toast({
-            title: "Almost there!",
-            description: "Your account is ready. Please refresh to load your plan.",
-          });
-          onOpenChange(false);
-          navigate('/dashboard');
-          return;
-        }
+      // Verify profile exists before generating plan
+      const { data: verifyProfile, error: verifyError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', authData.user.id)
+        .single();
 
-        console.log('Profile verified, generating daily plan...');
+      if (verifyError || !verifyProfile) {
+        console.error('Profile verification failed:', verifyError);
+        toast({
+          title: "Almost there!",
+          description: "Your account is ready. Please refresh to load your plan.",
+        });
+        onOpenChange(false);
+        navigate('/dashboard');
+        return;
+      }
 
-        // Generate daily plan with proper auth
-        const { data: session } = await supabase.auth.getSession();
-        if (!session.session) {
-          console.error('No session available for generateDailyPlan');
-          toast({
-            title: "Welcome!",
-            description: "Your account is ready. Your plan will load when you access the dashboard.",
-          });
-          onOpenChange(false);
-          navigate('/dashboard');
-          return;
-        }
+      console.log('Profile verified, generating daily plan...');
 
-        const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
-        
-        if (planError) {
-          console.error('Plan generation error:', planError);
-          toast({
-            title: "Welcome!",
-            description: "Your account is ready. Your plan will load shortly.",
-          });
-        } else {
-          console.log('Daily plan generated successfully');
-          toast({
-            title: "Welcome!",
-            description: "Your personalized plan is ready.",
-          });
-        }
+      // Generate daily plan with proper auth
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        console.error('No session available for generateDailyPlan');
+        toast({
+          title: "Welcome!",
+          description: "Your account is ready. Your plan will load when you access the dashboard.",
+        });
+        onOpenChange(false);
+        navigate('/dashboard');
+        return;
+      }
+
+      const { error: planError } = await supabase.functions.invoke('generateDailyPlan');
+      
+      if (planError) {
+        console.error('Plan generation error:', planError);
+        toast({
+          title: "Welcome!",
+          description: "Your account is ready. Your plan will load shortly.",
+        });
+      } else {
+        console.log('Daily plan generated successfully');
+        toast({
+          title: "Welcome!",
+          description: "Your personalized plan is ready.",
+        });
       }
 
       // Clear onboarding data from session
@@ -158,6 +171,8 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
       sessionStorage.removeItem('age');
       sessionStorage.removeItem('goal');
       sessionStorage.removeItem('workoutMode');
+      sessionStorage.removeItem('trainingStyles');
+      sessionStorage.removeItem('intensity');
       sessionStorage.removeItem('onboardingComplete');
       
       onOpenChange(false);

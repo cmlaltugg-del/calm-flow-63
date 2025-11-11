@@ -179,6 +179,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pilates_exercises: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          instructions: string | null
+          level: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          instructions?: string | null
+          level: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          instructions?: string | null
+          level?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -187,8 +214,10 @@ export type Database = {
           gender: string | null
           goal: string | null
           height: number | null
+          intensity: string | null
           protein_target: number | null
           target_weight_kg: number | null
+          training_styles: string[] | null
           user_id: string
           weight: number | null
           workout_mode: string | null
@@ -200,8 +229,10 @@ export type Database = {
           gender?: string | null
           goal?: string | null
           height?: number | null
+          intensity?: string | null
           protein_target?: number | null
           target_weight_kg?: number | null
+          training_styles?: string[] | null
           user_id: string
           weight?: number | null
           workout_mode?: string | null
@@ -213,8 +244,10 @@ export type Database = {
           gender?: string | null
           goal?: string | null
           height?: number | null
+          intensity?: string | null
           protein_target?: number | null
           target_weight_kg?: number | null
+          training_styles?: string[] | null
           user_id?: string
           weight?: number | null
           workout_mode?: string | null

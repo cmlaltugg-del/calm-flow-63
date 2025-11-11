@@ -16,7 +16,7 @@ const Goals = () => {
 
   const handleContinue = () => {
     sessionStorage.setItem("goal", selectedGoal);
-    navigate("/onboarding/training-style");
+    navigate("/onboarding/workout-mode");
   };
 
   return (

@@ -22,7 +22,14 @@ const TrainingStyle = () => {
 
   const handleContinue = () => {
     sessionStorage.setItem("trainingStyles", JSON.stringify(selected));
-    navigate("/onboarding/water-preview");
+    
+    // If gym is selected, continue with height/weight flow
+    if (selected.includes("gym")) {
+      navigate("/onboarding/height-weight");
+    } else {
+      // For pilates/yoga only, skip to intensity selection
+      navigate("/onboarding/intensity");
+    }
   };
 
   return (
