@@ -10,6 +10,7 @@ import Gender from "./pages/onboarding/Gender";
 import TargetWeight from "./pages/onboarding/TargetWeight";
 import Age from "./pages/onboarding/Age";
 import Goals from "./pages/onboarding/Goals";
+import TrainingStyle from "./pages/onboarding/TrainingStyle";
 import WorkoutMode from "./pages/onboarding/WorkoutMode";
 import WaterPreview from "./pages/onboarding/WaterPreview";
 import Dashboard from "./pages/Dashboard";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/onboarding/target-weight" element={<TargetWeight />} />
             <Route path="/onboarding/age" element={<Age />} />
             <Route path="/onboarding/goals" element={<Goals />} />
+            <Route path="/onboarding/training-style" element={<TrainingStyle />} />
             <Route path="/onboarding/workout-mode" element={<WorkoutMode />} />
             <Route path="/onboarding/water-preview" element={<WaterPreview />} />
             <Route path="/dashboard" element={<Dashboard />} />
