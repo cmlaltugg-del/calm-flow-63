@@ -82,43 +82,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Select exercises based on training styles
+    // Determine training mode combinations
+    const hasYoga = trainingStyles.includes('yoga');
+    const hasPilates = trainingStyles.includes('pilates');
+    
     let exercisesWithCalories: any[] = [];
+    let pilatesWorkout: any = null;
     let total_exercise_calories = 0;
     let mainExercise: any = null;
 
-    if (hasGym) {
-      // Select 5 exercises based on workout mode
-      const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
-      const { data: exercises, error: exerciseError } = await supabase
-        .from(exerciseTable)
-        .select('*')
-        .limit(50);
-
-      if (exerciseError || !exercises || exercises.length === 0) {
-        console.error('Exercise fetch error:', exerciseError);
-        return new Response(
-          JSON.stringify({ error: 'No exercises available' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Pick 5 random exercises
-      const shuffled = exercises.sort(() => 0.5 - Math.random());
-      const selectedExercises = shuffled.slice(0, Math.min(5, exercises.length));
-      
-      // Calculate calories for each exercise (rough estimate: 5-8 cal/min)
-      exercisesWithCalories = selectedExercises.map(ex => ({
-        title: ex.title,
-        instructions: ex.instructions,
-        reps_or_duration: ex.reps_or_duration,
-        calories: Math.round(Math.random() * 30 + 40) // 40-70 calories per exercise
-      }));
-      
-      total_exercise_calories = exercisesWithCalories.reduce((sum, ex) => sum + ex.calories, 0);
-      mainExercise = selectedExercises[0];
-    } else if (trainingStyles.includes('pilates')) {
-      // Select pilates exercises
+    // CASE 1: Yoga only (no gym, no pilates)
+    if (hasYoga && !hasGym && !hasPilates) {
+      console.log('Yoga-only mode');
+      // Main workout will be yoga, handled below
+      mainExercise = { title: 'Yoga Session', instructions: 'See yoga section', reps_or_duration: '30-45 min' };
+    }
+    // CASE 2: Pilates only (no gym, no yoga)
+    else if (hasPilates && !hasGym && !hasYoga) {
+      console.log('Pilates-only mode');
       const intensity = profile.intensity || 'medium';
       const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
       const level = levelMap[intensity];
@@ -137,19 +118,69 @@ Deno.serve(async (req) => {
         );
       }
 
-      const shuffled = pilatesExercises.sort(() => 0.5 - Math.random());
-      const selectedPilates = shuffled.slice(0, Math.min(5, pilatesExercises.length));
+      const selectedPilates = pilatesExercises.sort(() => 0.5 - Math.random())[0];
+      mainExercise = selectedPilates;
+      mainExercise.reps_or_duration = `${mainExercise.duration_minutes} minutes`;
+      exercisesWithCalories = [{
+        title: selectedPilates.title,
+        instructions: selectedPilates.instructions,
+        reps_or_duration: mainExercise.reps_or_duration,
+        calories: Math.round(selectedPilates.duration_minutes * 5)
+      }];
+      total_exercise_calories = exercisesWithCalories[0].calories;
+    }
+    // CASE 3: Gym (with or without yoga/pilates)
+    else if (hasGym) {
+      console.log('Gym mode with optional yoga/pilates');
+      // Main gym workout
+      const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
+      const { data: exercises, error: exerciseError } = await supabase
+        .from(exerciseTable)
+        .select('*')
+        .limit(50);
+
+      if (exerciseError || !exercises || exercises.length === 0) {
+        console.error('Exercise fetch error:', exerciseError);
+        return new Response(
+          JSON.stringify({ error: 'No exercises available' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const shuffled = exercises.sort(() => 0.5 - Math.random());
+      const selectedExercises = shuffled.slice(0, Math.min(5, exercises.length));
       
-      exercisesWithCalories = selectedPilates.map(ex => ({
+      exercisesWithCalories = selectedExercises.map(ex => ({
         title: ex.title,
         instructions: ex.instructions,
-        reps_or_duration: `${ex.duration_minutes} minutes`,
-        calories: Math.round(ex.duration_minutes * 5) // Rough estimate: 5 cal/min for pilates
+        reps_or_duration: ex.reps_or_duration,
+        calories: Math.round(Math.random() * 30 + 40)
       }));
       
       total_exercise_calories = exercisesWithCalories.reduce((sum, ex) => sum + ex.calories, 0);
-      mainExercise = selectedPilates[0];
-      mainExercise.reps_or_duration = `${mainExercise.duration_minutes} minutes`;
+      mainExercise = selectedExercises[0];
+
+      // Add pilates core work (5-10 min) if pilates selected
+      if (hasPilates) {
+        const intensity = profile.intensity || 'medium';
+        const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
+        const level = levelMap[intensity];
+
+        const { data: pilatesExercises, error: pilatesError } = await supabase
+          .from('pilates_exercises')
+          .select('*')
+          .eq('level', level)
+          .limit(50);
+
+        if (pilatesExercises && pilatesExercises.length > 0) {
+          const coreWorkouts = pilatesExercises.filter(p => p.duration_minutes >= 5 && p.duration_minutes <= 10);
+          if (coreWorkouts.length > 0) {
+            pilatesWorkout = coreWorkouts.sort(() => 0.5 - Math.random())[0];
+            const pilatesCalories = Math.round(pilatesWorkout.duration_minutes * 5);
+            total_exercise_calories += pilatesCalories;
+          }
+        }
+      }
     }
 
     // Select meal (only for gym users)
@@ -175,18 +206,23 @@ Deno.serve(async (req) => {
 
     // Select yoga based on training styles and intensity
     let randomYoga: any = null;
-    if (trainingStyles.includes('yoga')) {
+    if (hasYoga) {
       let allowedIntensities: string[] = ['low', 'medium'];
       
-      if (hasGym && profile.goal) {
-        const intensityMap: Record<string, string[]> = {
-          lose_weight: ['low', 'medium'],
-          gain_muscle: ['medium', 'high'],
-          maintain: ['low', 'medium'],
-        };
-        allowedIntensities = intensityMap[profile.goal] || ['low', 'medium'];
-      } else if (profile.intensity) {
+      // For yoga-only users, use their selected intensity
+      if (!hasGym && profile.intensity) {
         allowedIntensities = [profile.intensity];
+      }
+      // For gym users with yoga, select 3-5 min cooldown sessions
+      else if (hasGym) {
+        if (profile.goal) {
+          const intensityMap: Record<string, string[]> = {
+            lose_weight: ['low', 'medium'],
+            gain_muscle: ['medium', 'high'],
+            maintain: ['low', 'medium'],
+          };
+          allowedIntensities = intensityMap[profile.goal] || ['low', 'medium'];
+        }
       }
       
       const { data: yogaSessions, error: yogaError } = await supabase
@@ -203,7 +239,16 @@ Deno.serve(async (req) => {
         );
       }
 
-      randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+      // If gym+yoga, prefer shorter sessions (3-5 min cooldown)
+      let availableYoga = yogaSessions;
+      if (hasGym) {
+        const shortSessions = yogaSessions.filter(y => y.duration_minutes >= 3 && y.duration_minutes <= 5);
+        if (shortSessions.length > 0) {
+          availableYoga = shortSessions;
+        }
+      }
+
+      randomYoga = availableYoga[Math.floor(Math.random() * availableYoga.length)];
     }
     
     // Split yoga instructions into poses/steps
@@ -257,8 +302,23 @@ Deno.serve(async (req) => {
 
     // Add exercise data if available
     if (mainExercise) {
-      planData.exercise_title = mainExercise.title;
-      planData.exercise_instructions = mainExercise.instructions;
+      let combinedTitle = mainExercise.title;
+      let combinedInstructions = mainExercise.instructions || '';
+      
+      // For combined workouts, add pilates to the exercise section
+      if (pilatesWorkout) {
+        combinedTitle = `${mainExercise.title} + ${pilatesWorkout.title}`;
+        combinedInstructions = `${combinedInstructions}\n\n--- PILATES CORE (${pilatesWorkout.duration_minutes} min) ---\n${pilatesWorkout.instructions}`;
+        exercisesWithCalories.push({
+          title: pilatesWorkout.title,
+          instructions: pilatesWorkout.instructions,
+          reps_or_duration: `${pilatesWorkout.duration_minutes} minutes`,
+          calories: Math.round(pilatesWorkout.duration_minutes * 5)
+        });
+      }
+      
+      planData.exercise_title = combinedTitle;
+      planData.exercise_instructions = combinedInstructions;
       planData.reps_or_duration = mainExercise.reps_or_duration;
       planData.exercises_json = exercisesWithCalories;
       planData.total_exercise_calories = total_exercise_calories;
@@ -266,7 +326,12 @@ Deno.serve(async (req) => {
 
     // Add yoga data if available
     if (randomYoga) {
-      planData.yoga_title = randomYoga.title;
+      let yogaTitle = randomYoga.title;
+      // If combined with gym, label as cooldown
+      if (hasGym && randomYoga.duration_minutes <= 5) {
+        yogaTitle = `${randomYoga.title} (Cooldown)`;
+      }
+      planData.yoga_title = yogaTitle;
       planData.yoga_instructions = randomYoga.instructions;
       planData.yoga_duration_minutes = randomYoga.duration_minutes;
       planData.yoga_poses_json = yogaPoses;
