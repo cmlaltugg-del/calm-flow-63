@@ -25,11 +25,16 @@ export type Database = {
           id: string
           is_completed_exercise: boolean | null
           is_completed_meal: boolean | null
+          is_completed_pilates: boolean | null
           is_completed_yoga: boolean | null
           meal_calories_estimate: number | null
           meal_ingredients: string | null
           meal_instructions: string | null
           meal_title: string | null
+          pilates_duration_minutes: number | null
+          pilates_exercises_json: Json | null
+          pilates_instructions: string | null
+          pilates_title: string | null
           plan_date: string
           protein_target_g: number | null
           reps_or_duration: string
@@ -50,11 +55,16 @@ export type Database = {
           id?: string
           is_completed_exercise?: boolean | null
           is_completed_meal?: boolean | null
+          is_completed_pilates?: boolean | null
           is_completed_yoga?: boolean | null
           meal_calories_estimate?: number | null
           meal_ingredients?: string | null
           meal_instructions?: string | null
           meal_title?: string | null
+          pilates_duration_minutes?: number | null
+          pilates_exercises_json?: Json | null
+          pilates_instructions?: string | null
+          pilates_title?: string | null
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration: string
@@ -75,11 +85,16 @@ export type Database = {
           id?: string
           is_completed_exercise?: boolean | null
           is_completed_meal?: boolean | null
+          is_completed_pilates?: boolean | null
           is_completed_yoga?: boolean | null
           meal_calories_estimate?: number | null
           meal_ingredients?: string | null
           meal_instructions?: string | null
           meal_title?: string | null
+          pilates_duration_minutes?: number | null
+          pilates_exercises_json?: Json | null
+          pilates_instructions?: string | null
+          pilates_title?: string | null
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration?: string

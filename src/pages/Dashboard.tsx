@@ -321,6 +321,14 @@ const Dashboard = () => {
     poses: dailyPlan.yoga_poses_json || []
   } : null;
 
+  const todayPilates = dailyPlan && dailyPlan.pilates_title && dailyPlan.pilates_title !== 'No Pilates' && dailyPlan.pilates_duration_minutes ? {
+    title: dailyPlan.pilates_title,
+    duration: `${dailyPlan.pilates_duration_minutes} min`,
+    instructions: dailyPlan.pilates_instructions,
+    planId: dailyPlan.id,
+    exercises: dailyPlan.pilates_exercises_json || []
+  } : null;
+
   // Check user's training styles
   const trainingStyles = profile?.training_styles || [];
   const hasGym = trainingStyles.includes('gym');
@@ -485,6 +493,79 @@ const Dashboard = () => {
                 </Button>
               )}
             </CardContent>
+          </Card>
+        )}
+
+        {/* Today's Pilates - Show if training_styles includes pilates */}
+        {trainingStyles.includes('pilates') && todayPilates && (
+          <Card className="relative overflow-hidden">
+            {isPreview && (
+              <>
+                <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-sm rounded-full p-1.5 border border-border">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 z-[5]" />
+              </>
+            )}
+            <div className={isPreview ? "filter blur-[4px] opacity-95" : ""}>
+              <CardHeader>
+                <CardTitle>Today's Pilates</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">{todayPilates.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">{todayPilates.duration}</p>
+                </div>
+                
+                {/* Render pilates exercises list */}
+                {!isPreview && todayPilates.exercises && todayPilates.exercises.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-muted-foreground">Exercises:</h4>
+                    <div className="space-y-2">
+                      {todayPilates.exercises.map((exercise: any, index: number) => (
+                        <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium">{exercise.title}</span>
+                            <span className="text-sm text-muted-foreground">{exercise.duration_minutes} min</span>
+                          </div>
+                          {exercise.instructions && (
+                            <p className="text-xs text-muted-foreground mt-1">{getFirstInstruction(exercise.instructions)}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <Button 
+                  className="w-full" 
+                  disabled={isPreview || dailyPlan?.is_completed_pilates}
+                  onClick={() => !isPreview && navigate('/pilates-detail', {
+                    state: {
+                      title: todayPilates.title,
+                      duration: todayPilates.duration,
+                      instructions: todayPilates.instructions,
+                      planId: todayPilates.planId,
+                      exercises: todayPilates.exercises
+                    }
+                  })}
+                >
+                  {!isPreview && dailyPlan?.is_completed_pilates ? 'Completed ✓' : 'View Full Session'}
+                </Button>
+              </CardContent>
+            </div>
+            {isPreview && (
+              <div className="absolute bottom-3 right-3 z-10">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-primary text-primary hover:bg-primary/10"
+                  onClick={() => handleUnlock('pilates')}
+                >
+                  Unlock with free account
+                </Button>
+              </div>
+            )}
           </Card>
         )}
 
