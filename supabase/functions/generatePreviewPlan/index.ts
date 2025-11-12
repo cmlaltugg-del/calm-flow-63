@@ -54,9 +54,18 @@ Deno.serve(async (req) => {
         .lte('duration_minutes', 35)
         .limit(50);
 
-      if (yogaError) throw yogaError;
+      if (yogaError) console.error('Yoga fetch error (preview):', yogaError);
       if (yogaSessions && yogaSessions.length > 0) {
         randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+      } else {
+        // Fallback yoga session to avoid empty UI in preview
+        randomYoga = {
+          title: 'Gentle Yoga Flow',
+          instructions: 'Breathing focus. Cat-cow. Forward fold. Low lunge. Child\'s pose. Repeat calmly.',
+          duration_minutes: 20,
+          intensity_level: intensity,
+        };
+        console.log('Using fallback preview yoga session');
       }
     }
     // CASE 2: Pilates only

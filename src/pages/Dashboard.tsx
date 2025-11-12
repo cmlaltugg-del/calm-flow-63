@@ -513,8 +513,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Pilates - Show if training_styles includes pilates */}
-        {trainingStyles.includes('pilates') && todayPilates && (
+        {/* Today's Pilates - Show if there's pilates data */}
+        {todayPilates && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
@@ -586,8 +586,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Yoga - Show if training_styles includes yoga */}
-        {trainingStyles.includes('yoga') && todayYoga && (
+        {/* Today's Yoga - Show if there's yoga data */}
+        {todayYoga && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
