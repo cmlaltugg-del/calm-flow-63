@@ -93,6 +93,15 @@ Deno.serve(async (req) => {
     let randomYoga: any = null;
     let randomMeal: any = null;
 
+    // Handle empty training_styles - provide default minimal workout
+    if (!hasYoga && !hasGym && !hasPilates) {
+      console.log('No training styles selected, providing default workout');
+      mainExercise = {
+        title: 'Rest Day',
+        instructions: 'Take a rest day to recover. Stay hydrated and do light stretching if desired.',
+        reps_or_duration: 'Rest'
+      };
+    }
     // CASE 1: Yoga only
     if (hasYoga && !hasGym && !hasPilates) {
       console.log('Yoga-only mode');
@@ -315,11 +324,15 @@ Deno.serve(async (req) => {
       user_id: user.id,
       plan_date: today,
       daily_water_target_liters,
+      exercise_title: mainExercise?.title || 'No Exercise',
+      exercise_instructions: mainExercise?.instructions || 'No exercise planned for today',
+      reps_or_duration: mainExercise?.reps_or_duration || 'N/A',
+      yoga_title: randomYoga?.title || 'No Yoga',
+      meal_title: randomMeal?.title || 'No Meal Plan',
     };
 
     // Add meal data if available (gym users)
     if (randomMeal) {
-      planData.meal_title = randomMeal.title;
       planData.meal_instructions = randomMeal.instructions;
       planData.meal_ingredients = randomMeal.ingredients;
       planData.meal_calories_estimate = randomMeal.calories || 0;
@@ -356,6 +369,9 @@ Deno.serve(async (req) => {
       planData.exercise_title = combinedTitle;
       planData.exercise_instructions = combinedInstructions;
       planData.reps_or_duration = mainExercise.reps_or_duration;
+    }
+    
+    if (exercisesWithCalories.length > 0) {
       planData.exercises_json = exercisesWithCalories;
       planData.total_exercise_calories = total_exercise_calories;
     }
@@ -380,6 +396,9 @@ Deno.serve(async (req) => {
       planData.yoga_title = yogaTitle;
       planData.yoga_instructions = randomYoga.instructions;
       planData.yoga_duration_minutes = randomYoga.duration_minutes;
+    }
+    
+    if (yogaPoses.length > 0) {
       planData.yoga_poses_json = yogaPoses;
     }
 

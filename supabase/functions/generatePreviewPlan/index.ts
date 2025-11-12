@@ -34,6 +34,10 @@ Deno.serve(async (req) => {
     let randomYoga: any = null;
     let randomPilates: any = null;
 
+    // Handle empty training_styles
+    if (!hasYoga && !hasGym && !hasPilates) {
+      console.log('No training styles selected, providing default plan');
+    }
     // CASE 1: Yoga only
     if (hasYoga && !hasGym && !hasPilates) {
       const intensity = profile.intensity || 'medium';
