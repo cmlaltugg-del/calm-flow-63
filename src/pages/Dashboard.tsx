@@ -343,8 +343,10 @@ const Dashboard = () => {
     exercises: dailyPlan.pilates_exercises_json || []
   } : null;
 
-  // Check user's training styles
-  const trainingStyles = profile?.training_styles || [];
+  // Check user's training styles (preview uses session storage)
+  const trainingStyles = isPreview
+    ? (JSON.parse(sessionStorage.getItem('trainingStyles') || '[]') as string[])
+    : (profile?.training_styles || []);
   console.log('Dashboard training styles:', trainingStyles);
   const hasGym = trainingStyles.includes('gym');
   const hasYoga = trainingStyles.includes('yoga');
