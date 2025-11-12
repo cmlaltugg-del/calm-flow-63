@@ -17,6 +17,7 @@ import WaterPreview from "./pages/onboarding/WaterPreview";
 import Dashboard from "./pages/Dashboard";
 import ExerciseDetail from "./pages/ExerciseDetail";
 import YogaDetail from "./pages/YogaDetail";
+import PilatesDetail from "./pages/PilatesDetail";
 import MealDetail from "./pages/MealDetail";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/exercise-detail" element={<ExerciseDetail />} />
             <Route path="/yoga-detail" element={<YogaDetail />} />
+            <Route path="/pilates-detail" element={<PilatesDetail />} />
             <Route path="/meal-detail" element={<MealDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
