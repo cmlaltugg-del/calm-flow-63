@@ -65,6 +65,12 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const trainingStyles = profile.training_styles || [];
     const hasGym = trainingStyles.includes('gym');
+    const hasYoga = trainingStyles.includes('yoga');
+    const hasPilates = trainingStyles.includes('pilates');
+    const hasHome = trainingStyles.includes('home');
+    const hasStrength = hasGym || hasHome; // Either gym or home strength training
+    
+    console.log('Training styles:', trainingStyles, { hasGym, hasHome, hasYoga, hasPilates, hasStrength });
 
     // Check if plan already exists for today
     const { data: existingPlan } = await supabase
@@ -83,8 +89,7 @@ Deno.serve(async (req) => {
     }
 
     // Determine training mode combinations
-    const hasYoga = trainingStyles.includes('yoga');
-    const hasPilates = trainingStyles.includes('pilates');
+    console.log('Mode check:', { hasStrength, hasYoga, hasPilates });
     
     let exercisesWithCalories: any[] = [];
     let pilatesWorkout: any = null;
@@ -94,7 +99,7 @@ Deno.serve(async (req) => {
     let randomMeal: any = null;
 
     // Handle empty training_styles - provide default minimal workout
-    if (!hasYoga && !hasGym && !hasPilates) {
+    if (!hasYoga && !hasStrength && !hasPilates) {
       console.log('No training styles selected, providing default workout');
       mainExercise = {
         title: 'Rest Day',
@@ -103,7 +108,7 @@ Deno.serve(async (req) => {
       };
     }
     // CASE 1: Yoga only
-    if (hasYoga && !hasGym && !hasPilates) {
+    else if (hasYoga && !hasStrength && !hasPilates) {
       console.log('Yoga-only mode');
       const intensity = profile.intensity || 'medium';
       const { data: yogaSessions, error: yogaError } = await supabase
@@ -126,7 +131,7 @@ Deno.serve(async (req) => {
       mainExercise = { title: randomYoga.title, instructions: randomYoga.instructions, reps_or_duration: `${randomYoga.duration_minutes} min` };
     }
     // CASE 2: Pilates only
-    else if (hasPilates && !hasGym && !hasYoga) {
+    else if (hasPilates && !hasStrength && !hasYoga) {
       console.log('Pilates-only mode');
       const intensity = profile.intensity || 'medium';
       const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
@@ -148,14 +153,15 @@ Deno.serve(async (req) => {
 
       const selectedPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
       pilatesWorkout = selectedPilates;
+      console.log('Selected pilates workout:', pilatesWorkout.title);
       mainExercise = {
         title: 'Rest Day',
         instructions: 'Focus on pilates today.',
         reps_or_duration: 'See pilates section'
       };
     }
-    // CASE 3: Yoga + Pilates (no gym)
-    else if (hasYoga && hasPilates && !hasGym) {
+    // CASE 3: Yoga + Pilates (no strength training)
+    else if (hasYoga && hasPilates && !hasStrength) {
       console.log('Yoga + Pilates mode');
       const intensity = profile.intensity || 'medium';
       const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
@@ -196,11 +202,11 @@ Deno.serve(async (req) => {
         reps_or_duration: 'See yoga and pilates sections'
       };
     }
-    // CASE 4: Gym (with or without yoga/pilates)
-    else if (hasGym) {
-      console.log('Gym mode with optional yoga/pilates');
+    // CASE 4: Strength training (gym or home, with or without yoga/pilates)
+    else if (hasStrength) {
+      console.log('Strength mode with optional yoga/pilates');
       // Main gym workout
-      const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
+      const exerciseTable = (hasGym || profile.workout_mode === 'gym') ? 'exercises_gym' : 'exercises_home';
       const { data: exercises, error: exerciseError } = await supabase
         .from(exerciseTable)
         .select('*')
@@ -227,7 +233,7 @@ Deno.serve(async (req) => {
       total_exercise_calories = exercisesWithCalories.reduce((sum, ex) => sum + ex.calories, 0);
       mainExercise = selectedExercises[0];
 
-      // Fetch meals for gym users
+      // Fetch meals for strength training users
       let mealsQuery = supabase.from('meals').select('*');
       if (profile.goal === 'gain_muscle') {
         mealsQuery = mealsQuery.eq('protein_focused', true);
@@ -277,12 +283,12 @@ Deno.serve(async (req) => {
       })) : 
       randomYoga ? [{ pose_name: 'Full Session', instructions: randomYoga.title }] : [];
 
-    // Calculate targets (only for gym users)
+    // Calculate targets (only for strength training users)
     let calorie_target = null;
     let protein_target_g = null;
     let daily_water_target_liters = 2.0;
 
-    if (hasGym) {
+    if (hasStrength) {
       const weightNum = profile.weight;
       const heightNum = profile.height;
       const ageNum = profile.age;
@@ -361,11 +367,17 @@ Deno.serve(async (req) => {
       planData.pilates_exercises_json = pilatesExercises;
     }
 
-    // Add calorie/protein targets if gym user
-    if (hasGym) {
+    // Add calorie/protein targets if strength training user
+    if (hasStrength) {
       planData.calorie_target = calorie_target;
       planData.protein_target_g = protein_target_g;
     }
+    
+    console.log('Plan data before insert:', {
+      exercise_title: planData.exercise_title,
+      yoga_title: planData.yoga_title,
+      pilates_title: planData.pilates_title
+    });
 
     const { data: newPlan, error: insertError } = await supabase
       .from('daily_plans')

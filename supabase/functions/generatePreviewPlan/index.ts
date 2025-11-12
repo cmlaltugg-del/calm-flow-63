@@ -28,6 +28,10 @@ Deno.serve(async (req) => {
     const hasGym = trainingStyles.includes('gym');
     const hasYoga = trainingStyles.includes('yoga');
     const hasPilates = trainingStyles.includes('pilates');
+    const hasHome = trainingStyles.includes('home');
+    const hasStrength = hasGym || hasHome;
+    
+    console.log('Preview training styles:', trainingStyles, { hasGym, hasHome, hasYoga, hasPilates, hasStrength });
 
     let randomExercise: any = null;
     let randomMeal: any = null;
@@ -35,11 +39,12 @@ Deno.serve(async (req) => {
     let randomPilates: any = null;
 
     // Handle empty training_styles
-    if (!hasYoga && !hasGym && !hasPilates) {
+    if (!hasYoga && !hasStrength && !hasPilates) {
       console.log('No training styles selected, providing default plan');
     }
     // CASE 1: Yoga only
-    if (hasYoga && !hasGym && !hasPilates) {
+    else if (hasYoga && !hasStrength && !hasPilates) {
+      console.log('Preview Yoga-only mode');
       const intensity = profile.intensity || 'medium';
       const { data: yogaSessions, error: yogaError } = await supabase
         .from('yoga_sessions')
@@ -55,7 +60,8 @@ Deno.serve(async (req) => {
       }
     }
     // CASE 2: Pilates only
-    else if (hasPilates && !hasGym && !hasYoga) {
+    else if (hasPilates && !hasStrength && !hasYoga) {
+      console.log('Preview Pilates-only mode');
       const intensity = profile.intensity || 'medium';
       const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
       const level = levelMap[intensity];
@@ -69,10 +75,12 @@ Deno.serve(async (req) => {
       if (pilatesError) throw pilatesError;
       if (pilatesExercises && pilatesExercises.length > 0) {
         randomPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
+        console.log('Selected preview pilates:', randomPilates.title);
       }
     }
-    // CASE 3: Yoga + Pilates (no gym)
-    else if (hasYoga && hasPilates && !hasGym) {
+    // CASE 3: Yoga + Pilates (no strength training)
+    else if (hasYoga && hasPilates && !hasStrength) {
+      console.log('Preview Yoga + Pilates mode');
       const intensity = profile.intensity || 'medium';
       const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
       const level = levelMap[intensity];
@@ -101,9 +109,10 @@ Deno.serve(async (req) => {
         randomPilates = pilatesExercises[Math.floor(Math.random() * pilatesExercises.length)];
       }
     }
-    // CASE 4: Gym (with or without yoga/pilates)
-    else if (hasGym) {
-      const exerciseTable = profile.workout_mode === 'home' ? 'exercises_home' : 'exercises_gym';
+    // CASE 4: Strength training (gym or home, with or without yoga/pilates)
+    else if (hasStrength) {
+      console.log('Preview Strength mode');
+      const exerciseTable = (hasGym || profile.workout_mode === 'gym') ? 'exercises_gym' : 'exercises_home';
       const { data: exercises, error: exerciseError } = await supabase
         .from(exerciseTable)
         .select('*')
@@ -169,8 +178,8 @@ Deno.serve(async (req) => {
     let calorieTarget = null;
     let proteinTarget = null;
 
-    // Calculate targets only for gym users
-    if (hasGym) {
+    // Calculate targets only for strength training users
+    if (hasStrength) {
       // Calculate BMR
       let bmr;
       if (gender === 'male') {
@@ -246,13 +255,13 @@ Deno.serve(async (req) => {
       plan.pilates_exercises_json = pilatesExercises;
     }
 
-    // Add calorie/protein targets (only for gym users)
-    if (hasGym) {
+    // Add calorie/protein targets (only for strength training users)
+    if (hasStrength) {
       plan.calorie_target = calorieTarget;
       plan.protein_target_g = proteinTarget;
     }
 
-    console.log('Generated preview plan:', plan);
+    console.log('Generated preview plan:', JSON.stringify(plan, null, 2));
 
     return new Response(
       JSON.stringify(plan),

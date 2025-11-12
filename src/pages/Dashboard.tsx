@@ -153,6 +153,8 @@ const Dashboard = () => {
 
       setProfile(profileData);
       
+      console.log('Profile training styles:', profileData.training_styles);
+      
       // Fetch daily plan
       const { data, error } = await supabase
         .from('daily_plans')
@@ -167,7 +169,12 @@ const Dashboard = () => {
         console.log('No daily plan found for today, generating new plan...');
         await generateNewPlan();
       } else {
-        console.log('Daily plan loaded successfully');
+        console.log('Daily plan loaded:', {
+          has_yoga: !!data.yoga_title,
+          has_pilates: !!data.pilates_title,
+          yoga_title: data.yoga_title,
+          pilates_title: data.pilates_title
+        });
         setDailyPlan(data);
         setIsPreview(false);
       }
@@ -255,6 +262,13 @@ const Dashboard = () => {
 
       setDailyPlan(data);
       setIsPreview(true);
+      console.log('Preview plan loaded:', {
+        has_yoga: !!data.yoga_title,
+        has_pilates: !!data.pilates_title,
+        yoga_title: data.yoga_title,
+        pilates_title: data.pilates_title,
+        training_styles: trainingStyles
+      });
     } catch (error) {
       console.error('Error generating preview plan:', error);
       toast({
@@ -331,6 +345,7 @@ const Dashboard = () => {
 
   // Check user's training styles
   const trainingStyles = profile?.training_styles || [];
+  console.log('Dashboard training styles:', trainingStyles);
   const hasGym = trainingStyles.includes('gym');
   const hasYoga = trainingStyles.includes('yoga');
   const hasPilates = trainingStyles.includes('pilates');
