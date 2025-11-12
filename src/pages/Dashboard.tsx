@@ -186,6 +186,7 @@ const Dashboard = () => {
   const generateNewPlan = async () => {
     try {
       console.log('Invoking generateDailyPlan edge function...');
+      setLoading(true);
       const { data, error } = await supabase.functions.invoke('generateDailyPlan');
       
       if (error) {
@@ -193,8 +194,17 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Plan generated, fetching updated data...');
-      await fetchDailyPlan();
+      console.log('Plan generated successfully:', data);
+      
+      // Set the plan data directly from the response for immediate display
+      if (data) {
+        setDailyPlan(data);
+        setIsPreview(false);
+        toast({
+          title: "Plan Generated",
+          description: "Your personalized workout plan is ready!",
+        });
+      }
     } catch (error) {
       console.error('Error generating plan:', error);
       toast({
@@ -202,6 +212,7 @@ const Dashboard = () => {
         description: "We couldn't prepare your personal plan — contact support.",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -285,7 +296,7 @@ const Dashboard = () => {
     );
   }
 
-  const todayExercise = dailyPlan ? {
+  const todayExercise = dailyPlan && dailyPlan.exercise_title && dailyPlan.exercise_title !== 'No Exercise' ? {
     title: dailyPlan.exercise_title,
     duration: dailyPlan.reps_or_duration,
     instructions: dailyPlan.exercise_instructions,
@@ -294,7 +305,7 @@ const Dashboard = () => {
     totalCalories: dailyPlan.total_exercise_calories || 0
   } : null;
 
-  const todayMeal = dailyPlan ? {
+  const todayMeal = dailyPlan && dailyPlan.meal_title && dailyPlan.meal_title !== 'No Meal Plan' ? {
     title: dailyPlan.meal_title,
     instructions: dailyPlan.meal_instructions,
     ingredients: dailyPlan.meal_ingredients,
@@ -302,7 +313,7 @@ const Dashboard = () => {
     planId: dailyPlan.id
   } : null;
 
-  const todayYoga = dailyPlan ? {
+  const todayYoga = dailyPlan && dailyPlan.yoga_title && dailyPlan.yoga_title !== 'No Yoga' && dailyPlan.yoga_duration_minutes ? {
     title: dailyPlan.yoga_title,
     duration: `${dailyPlan.yoga_duration_minutes} min`,
     instructions: dailyPlan.yoga_instructions,
@@ -409,8 +420,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Exercise - Show if gym or pilates selected */}
-        {todayExercise && (hasGym || hasPilates) && (
+        {/* Today's Exercise - Show if data exists and user has gym/pilates */}
+        {todayExercise && (
           <Card className="relative">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -460,8 +471,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Yoga - Show if yoga selected */}
-        {todayYoga && hasYoga && (
+        {/* Today's Yoga - Show if data exists and user has yoga */}
+        {todayYoga && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
@@ -532,8 +543,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Today's Meal - Show only for gym users */}
-        {todayMeal && hasGym && (
+        {/* Today's Meal - Show if data exists and user has gym */}
+        {todayMeal && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>

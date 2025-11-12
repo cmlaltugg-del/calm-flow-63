@@ -20,7 +20,7 @@ export type Database = {
           created_at: string
           daily_water_target_liters: number
           exercise_instructions: string | null
-          exercise_title: string
+          exercise_title: string | null
           exercises_json: Json | null
           id: string
           is_completed_exercise: boolean | null
@@ -29,7 +29,7 @@ export type Database = {
           meal_calories_estimate: number | null
           meal_ingredients: string | null
           meal_instructions: string | null
-          meal_title: string
+          meal_title: string | null
           plan_date: string
           protein_target_g: number | null
           reps_or_duration: string
@@ -38,14 +38,14 @@ export type Database = {
           yoga_duration_minutes: number
           yoga_instructions: string | null
           yoga_poses_json: Json | null
-          yoga_title: string
+          yoga_title: string | null
         }
         Insert: {
           calorie_target?: number | null
           created_at?: string
           daily_water_target_liters: number
           exercise_instructions?: string | null
-          exercise_title: string
+          exercise_title?: string | null
           exercises_json?: Json | null
           id?: string
           is_completed_exercise?: boolean | null
@@ -54,7 +54,7 @@ export type Database = {
           meal_calories_estimate?: number | null
           meal_ingredients?: string | null
           meal_instructions?: string | null
-          meal_title: string
+          meal_title?: string | null
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration: string
@@ -63,14 +63,14 @@ export type Database = {
           yoga_duration_minutes: number
           yoga_instructions?: string | null
           yoga_poses_json?: Json | null
-          yoga_title: string
+          yoga_title?: string | null
         }
         Update: {
           calorie_target?: number | null
           created_at?: string
           daily_water_target_liters?: number
           exercise_instructions?: string | null
-          exercise_title?: string
+          exercise_title?: string | null
           exercises_json?: Json | null
           id?: string
           is_completed_exercise?: boolean | null
@@ -79,7 +79,7 @@ export type Database = {
           meal_calories_estimate?: number | null
           meal_ingredients?: string | null
           meal_instructions?: string | null
-          meal_title?: string
+          meal_title?: string | null
           plan_date?: string
           protein_target_g?: number | null
           reps_or_duration?: string
@@ -88,7 +88,7 @@ export type Database = {
           yoga_duration_minutes?: number
           yoga_instructions?: string | null
           yoga_poses_json?: Json | null
-          yoga_title?: string
+          yoga_title?: string | null
         }
         Relationships: []
       }
