@@ -420,9 +420,17 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Exercise - Show if data exists and user has gym/pilates */}
-        {todayExercise && (
+        {/* Today's Exercise - Show if training_styles includes gym or pilates */}
+        {(trainingStyles.includes('gym') || trainingStyles.includes('pilates')) && todayExercise && (
           <Card className="relative">
+            {isPreview && (
+              <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+                <Button onClick={() => handleUnlock('exercise')} size="lg" className="gap-2">
+                  <Lock className="h-4 w-4" />
+                  Sign Up to Unlock
+                </Button>
+              </div>
+            )}
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Dumbbell className="h-5 w-5" />
@@ -436,13 +444,29 @@ const Dashboard = () => {
                 {todayExercise.totalCalories > 0 && (
                   <Badge variant="secondary">{todayExercise.totalCalories} cal total</Badge>
                 )}
-                {isPreview && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {getFirstInstruction(todayExercise.instructions)}
-                  </p>
-                )}
               </div>
-              {!isPreview ? (
+              
+              {/* Render exercises list */}
+              {todayExercise.exercises && todayExercise.exercises.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Exercises:</h4>
+                  <div className="space-y-2">
+                    {todayExercise.exercises.map((exercise: any, index: number) => (
+                      <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium">{exercise.title}</span>
+                          <span className="text-sm text-muted-foreground">{exercise.reps_or_duration}</span>
+                        </div>
+                        {exercise.instructions && (
+                          <p className="text-xs text-muted-foreground mt-1">{getFirstInstruction(exercise.instructions)}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {!isPreview && (
                 <Button 
                   className="w-full"
                   onClick={() => navigate('/exercise-detail', { 
@@ -457,22 +481,15 @@ const Dashboard = () => {
                   })}
                   disabled={dailyPlan?.is_completed_exercise}
                 >
-                  {dailyPlan?.is_completed_exercise ? 'Completed ✓' : 'Start Exercise'}
+                  {dailyPlan?.is_completed_exercise ? 'Completed ✓' : 'View Full Workout'}
                 </Button>
-              ) : (
-                <div className="space-y-2">
-                  <div className="h-px bg-border" />
-                  <p className="text-xs text-muted-foreground italic">
-                    Full workout details available after signup
-                  </p>
-                </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Today's Yoga - Show if data exists and user has yoga */}
-        {todayYoga && (
+        {/* Today's Yoga - Show if training_styles includes yoga */}
+        {trainingStyles.includes('yoga') && todayYoga && (
           <Card className="relative overflow-hidden">
             {isPreview && (
               <>
@@ -489,8 +506,29 @@ const Dashboard = () => {
               <CardContent className="space-y-4">
                 <div>
                   <h3 className="font-semibold text-lg mb-2">{todayYoga.title}</h3>
-                  <p className="text-sm text-muted-foreground">{todayYoga.duration}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{todayYoga.duration}</p>
                 </div>
+                
+                {/* Render yoga poses list */}
+                {!isPreview && todayYoga.poses && todayYoga.poses.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-muted-foreground">Poses:</h4>
+                    <div className="space-y-2">
+                      {todayYoga.poses.map((pose: any, index: number) => (
+                        <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium">{pose.title}</span>
+                            <span className="text-sm text-muted-foreground">{pose.duration_minutes} min</span>
+                          </div>
+                          {pose.instructions && (
+                            <p className="text-xs text-muted-foreground mt-1">{getFirstInstruction(pose.instructions)}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <Button 
                   className="w-full" 
                   disabled={isPreview || dailyPlan?.is_completed_yoga}
@@ -504,7 +542,7 @@ const Dashboard = () => {
                     }
                   })}
                 >
-                  {!isPreview && dailyPlan?.is_completed_yoga ? 'Completed ✓' : 'Start Yoga'}
+                  {!isPreview && dailyPlan?.is_completed_yoga ? 'Completed ✓' : 'View Full Session'}
                 </Button>
               </CardContent>
             </div>
