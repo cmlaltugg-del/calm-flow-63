@@ -49,9 +49,9 @@ const Dashboard = () => {
     try {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const { data } = await supabase.from('workout_history').select('calories_burned').eq('user_id', user.id).gte('completed_at', sevenDaysAgo.toISOString());
+      const { data } = await (supabase as any).from('workout_history').select('calories_burned').eq('user_id', user.id).gte('completed_at', sevenDaysAgo.toISOString());
       const totalWorkouts = data?.length || 0;
-      const totalCalories = data?.reduce((sum, w) => sum + (w.calories_burned || 0), 0) || 0;
+      const totalCalories = data?.reduce((sum: number, w: any) => sum + (w.calories_burned || 0), 0) || 0;
       setWeeklyStats({ workouts: totalWorkouts, calories: totalCalories, goalPercentage: Math.min(Math.round((totalWorkouts / 7) * 100), 100) });
     } catch (error) {
       console.error('Error fetching weekly stats:', error);
@@ -84,11 +84,11 @@ const Dashboard = () => {
       // Initialize water intake from profile
       if (profileData) {
         const today = new Date().toISOString().split('T')[0];
-        const lastUpdate = profileData.last_water_update_date;
+        const lastUpdate = (profileData as any).last_water_update_date;
         
         // Reset water intake if it's a new day
         if (lastUpdate !== today) {
-          await supabase
+          await (supabase as any)
             .from('profiles')
             .update({ 
               water_intake_today: 0, 
@@ -97,7 +97,7 @@ const Dashboard = () => {
             .eq('user_id', user!.id);
           setWaterIntake(0);
         } else {
-          setWaterIntake(profileData.water_intake_today || 0);
+          setWaterIntake((profileData as any).water_intake_today || 0);
         }
       }
 
@@ -326,7 +326,7 @@ const Dashboard = () => {
     
     try {
       const today = new Date().toISOString().split('T')[0];
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({ 
           water_intake_today: newAmount,

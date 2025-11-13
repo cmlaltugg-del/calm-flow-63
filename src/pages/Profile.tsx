@@ -25,6 +25,9 @@ const Profile = () => {
     workout_mode: "",
     daily_calories: "",
     protein_target: "",
+    current_streak: 0,
+    longest_streak: 0,
+    total_workouts_completed: 0,
   });
 
   useEffect(() => {
@@ -50,15 +53,19 @@ const Profile = () => {
       if (error) throw error;
 
       if (data) {
+        const profileData = data as any;
         setProfile({
-          height: data.height?.toString() || "",
-          weight: data.weight?.toString() || "",
-          target_weight_kg: data.target_weight_kg?.toString() || "",
-          age: data.age?.toString() || "",
-          gender: data.gender || "",
-          workout_mode: data.workout_mode || "",
-          daily_calories: data.daily_calories?.toString() || "",
-          protein_target: data.protein_target?.toString() || "",
+          height: profileData.height?.toString() || "",
+          weight: profileData.weight?.toString() || "",
+          target_weight_kg: profileData.target_weight_kg?.toString() || "",
+          age: profileData.age?.toString() || "",
+          gender: profileData.gender || "",
+          workout_mode: profileData.workout_mode || "",
+          daily_calories: profileData.daily_calories?.toString() || "",
+          protein_target: profileData.protein_target?.toString() || "",
+          current_streak: profileData.current_streak || 0,
+          longest_streak: profileData.longest_streak || 0,
+          total_workouts_completed: profileData.total_workouts_completed || 0,
         });
       }
     } catch (error) {
