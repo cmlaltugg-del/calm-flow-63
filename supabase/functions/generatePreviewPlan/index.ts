@@ -187,8 +187,8 @@ Deno.serve(async (req) => {
     let calorieTarget = null;
     let proteinTarget = null;
 
-    // Calculate targets only for strength training users
-    if (hasStrength) {
+    // Calculate targets for ALL users with height/weight data
+    if (weight && height && age) {
       // Calculate BMR
       let bmr;
       if (gender === 'male') {
@@ -197,8 +197,13 @@ Deno.serve(async (req) => {
         bmr = 10 * weight + 6.25 * height - 5 * age - 161;
       }
 
-      // Activity factor and TDEE
-      const activityFactor = workout_mode === 'gym' ? 1.55 : 1.45;
+      // Activity factor based on training style
+      let activityFactor = 1.45; // Default
+      if (hasGym) activityFactor = 1.55;
+      else if (hasYoga) activityFactor = 1.40;
+      else if (hasPilates) activityFactor = 1.45;
+      else if (hasHome) activityFactor = 1.50;
+      
       const tdee = Math.round(bmr * activityFactor);
 
       // Calorie target based on goal
@@ -211,8 +216,21 @@ Deno.serve(async (req) => {
       }
       calorieTarget = Math.max(calorieTarget, 1200);
 
-      // Protein target
-      proteinTarget = Math.round(1.8 * targetWeight);
+      // Protein target (1.6g per kg target weight)
+      proteinTarget = Math.round(1.6 * targetWeight);
+    }
+
+    // Fetch meals for ALL users (not just strength training)
+    if (!randomMeal) {
+      let mealsQuery = supabase.from('meals').select('*');
+      if (goal === 'gain_muscle') {
+        mealsQuery = mealsQuery.eq('protein_focused', true);
+      }
+      
+      const { data: meals, error: mealError } = await mealsQuery.limit(50);
+      if (!mealError && meals && meals.length > 0) {
+        randomMeal = meals[Math.floor(Math.random() * meals.length)];
+      }
     }
 
     // Calculate water target

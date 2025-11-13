@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
       total_exercise_calories = exercisesWithCalories.reduce((sum, ex) => sum + ex.calories, 0);
       mainExercise = selectedExercises[0];
 
-      // Fetch meals for strength training users
+      // Fetch meals for ALL strength training users
       let mealsQuery = supabase.from('meals').select('*');
       if (profile.goal === 'gain_muscle') {
         mealsQuery = mealsQuery.eq('protein_focused', true);
@@ -365,17 +365,19 @@ Deno.serve(async (req) => {
         gif_url: getYogaGif(randomYoga.title)
       }] : [];
 
-    // Calculate targets (only for strength training users)
+    // Calculate targets for ALL users with height/weight data
     let calorie_target = null;
     let protein_target_g = null;
     let daily_water_target_liters = 2.0;
 
-    if (hasStrength) {
-      const weightNum = profile.weight;
-      const heightNum = profile.height;
-      const ageNum = profile.age;
-      const targetWeightNum = profile.target_weight_kg;
-      
+    const weightNum = profile.weight;
+    const heightNum = profile.height;
+    const ageNum = profile.age;
+    const targetWeightNum = profile.target_weight_kg;
+    const goal = profile.goal || 'maintain';
+
+    if (weightNum && heightNum && ageNum) {
+      // Calculate BMR
       let bmr;
       if (profile.gender === 'male') {
         bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
@@ -383,12 +385,43 @@ Deno.serve(async (req) => {
         bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
       }
       
-      const activityFactor = profile.workout_mode === 'home' ? 1.45 : 1.55;
-      const tdee = bmr * activityFactor;
+      // Activity factor based on training style
+      let activityFactor = 1.45; // Default
+      if (hasGym) activityFactor = 1.55;
+      else if (hasYoga) activityFactor = 1.40;
+      else if (hasPilates) activityFactor = 1.45;
+      else if (hasHome) activityFactor = 1.50;
       
-      calorie_target = Math.round(tdee - 350);
-      protein_target_g = Math.round(targetWeightNum * 2);
-      daily_water_target_liters = Math.round(weightNum * 0.033 * 10) / 10;
+      const tdee = Math.round(bmr * activityFactor);
+      
+      // Calorie target based on goal
+      if (goal === 'lose_weight') {
+        calorie_target = tdee - 500;
+      } else if (goal === 'gain_muscle') {
+        calorie_target = tdee + 250;
+      } else {
+        calorie_target = tdee;
+      }
+      calorie_target = Math.max(calorie_target, 1200);
+      
+      // Protein target (1.6g per kg target weight)
+      protein_target_g = Math.round(1.6 * (targetWeightNum || weightNum));
+      
+      // Water target
+      daily_water_target_liters = parseFloat((weightNum * 0.033).toFixed(1));
+    }
+
+    // Fetch meals for ALL users (not just strength training)
+    if (!randomMeal) {
+      let mealsQuery = supabase.from('meals').select('*');
+      if (goal === 'gain_muscle') {
+        mealsQuery = mealsQuery.eq('protein_focused', true);
+      }
+      
+      const { data: meals, error: mealError } = await mealsQuery.limit(50);
+      if (!mealError && meals && meals.length > 0) {
+        randomMeal = meals[Math.floor(Math.random() * meals.length)];
+      }
     }
 
     // Insert daily plan

@@ -462,8 +462,8 @@ const Dashboard = () => {
         {!isPreview && <WeeklySummaryCard weeklyWorkouts={weeklyStats.workouts} weeklyCalories={weeklyStats.calories} weeklyGoalPercentage={weeklyStats.goalPercentage} />}
         <WaterProgressBar waterIntake={waterIntake} dailyTarget={dailyWaterTarget} onAddWater={addWater} loading={waterLoading} isPreview={isPreview} />
 
-        {/* Targets Card - Only show for gym users */}
-        {hasGym && (
+        {/* Targets Card - Show for all users with calculated targets */}
+        {(dailyPlan?.calorie_target || dailyPlan?.protein_target_g) && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
