@@ -31,17 +31,14 @@ const Welcome = () => {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground">
-              NIA
-            </h1>
+          <div className="space-y-3">
             <p className="text-xl md:text-2xl text-muted-foreground font-light tracking-wide">
               Neural Intelligent Athlete
             </p>
+            <p className="text-lg text-muted-foreground font-light italic">
+              Train Smarter, Not Harder
+            </p>
           </div>
-          <p className="text-lg text-muted-foreground font-light italic">
-            Train Smarter, Not Harder
-          </p>
         </div>
         
         <Button 
