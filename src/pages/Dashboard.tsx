@@ -16,6 +16,7 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [waterIntake, setWaterIntake] = useState(0);
+  const [waterLoading, setWaterLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dailyPlan, setDailyPlan] = useState<any>(null);
   const [isPreview, setIsPreview] = useState(false);
@@ -64,6 +65,26 @@ const Dashboard = () => {
         });
         setLoading(false);
         return;
+      }
+
+      // Initialize water intake from profile
+      if (profileData) {
+        const today = new Date().toISOString().split('T')[0];
+        const lastUpdate = profileData.last_water_update_date;
+        
+        // Reset water intake if it's a new day
+        if (lastUpdate !== today) {
+          await supabase
+            .from('profiles')
+            .update({ 
+              water_intake_today: 0, 
+              last_water_update_date: today 
+            })
+            .eq('user_id', user!.id);
+          setWaterIntake(0);
+        } else {
+          setWaterIntake(profileData.water_intake_today || 0);
+        }
       }
 
       if (!profileData) {
@@ -282,8 +303,36 @@ const Dashboard = () => {
     }
   };
 
-  const addWater = () => {
-    setWaterIntake(prev => Math.min(prev + 0.25, dailyWaterTarget));
+  const addWater = async () => {
+    if (!user || waterLoading) return;
+    
+    const newAmount = Math.min(waterIntake + 0.25, dailyWaterTarget);
+    setWaterIntake(newAmount);
+    setWaterLoading(true);
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          water_intake_today: newAmount,
+          last_water_update_date: today
+        })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating water intake:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save water intake",
+        variant: "destructive",
+      });
+      // Revert on error
+      setWaterIntake(prev => Math.max(prev - 0.25, 0));
+    } finally {
+      setWaterLoading(false);
+    }
   };
 
   const handleUnlock = (cardName: string) => {
@@ -712,8 +761,8 @@ const Dashboard = () => {
             <Progress value={waterProgress} />
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold">{waterIntake.toFixed(2)}L</span>
-              <Button onClick={addWater} size="sm">
-                +0.25L
+              <Button onClick={addWater} size="sm" disabled={waterLoading || isPreview}>
+                {waterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '+0.25L'}
               </Button>
             </div>
           </CardContent>
