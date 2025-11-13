@@ -354,33 +354,40 @@ Deno.serve(async (req) => {
       meal = await generateMeal(enrichedProfile);
       console.log('Meal generated:', meal.title);
 
-      if (hasYoga && !hasStrength && !hasPilates) {
+      // Generate yoga if requested
+      if (hasYoga) {
         console.log('Generating yoga session with AI...');
-        yoga = await generateYoga(enrichedProfile);
-        console.log('Yoga generated:', yoga.title);
-      } else if (hasPilates && !hasStrength && !hasYoga) {
-        console.log('Generating pilates workout with AI...');
-        pilates = await generatePilates(enrichedProfile);
-        console.log('Pilates generated:', pilates.title);
-      } else if (hasYoga && hasPilates && !hasStrength) {
-        console.log('Generating yoga + pilates with AI...');
-        yoga = await generateYoga(enrichedProfile);
-        pilates = await generatePilates(enrichedProfile);
-        console.log('Yoga + Pilates generated');
-      } else if (hasStrength) {
-        const equipmentType = hasGym ? 'gym' : 'home';
-        console.log(`Generating ${equipmentType} exercise with AI...`);
-        exercise = await generateExercise(enrichedProfile, equipmentType);
-        console.log('Exercise generated:', exercise.title);
-        
-        if (hasYoga) {
-          console.log('Generating yoga cooldown with AI...');
+        try {
           yoga = await generateYoga(enrichedProfile);
-          console.log('Yoga cooldown generated:', yoga.title);
-        } else if (hasPilates) {
-          console.log('Generating pilates session with AI...');
+          console.log('Yoga generated:', yoga.title);
+        } catch (yogaError) {
+          console.error('Yoga generation failed:', yogaError);
+          // Continue with other content generation
+        }
+      }
+
+      // Generate pilates if requested
+      if (hasPilates) {
+        console.log('Generating pilates workout with AI...');
+        try {
           pilates = await generatePilates(enrichedProfile);
           console.log('Pilates generated:', pilates.title);
+        } catch (pilatesError) {
+          console.error('Pilates generation failed:', pilatesError);
+          // Continue with other content generation
+        }
+      }
+
+      // Generate strength training if requested
+      if (hasStrength || hasGym || hasHome) {
+        const equipmentType = hasGym ? 'gym' : 'home';
+        console.log(`Generating ${equipmentType} exercise with AI...`);
+        try {
+          exercise = await generateExercise(enrichedProfile, equipmentType);
+          console.log('Exercise generated:', exercise.title);
+        } catch (exerciseError) {
+          console.error('Exercise generation failed:', exerciseError);
+          // Continue with other content generation
         }
       }
     } catch (aiError) {
