@@ -443,14 +443,31 @@ Deno.serve(async (req) => {
       pilates_title: planData.pilates_title
     });
 
-    const { data: newPlan, error: insertError } = await supabase
+    const { data: newPlan, error: upsertError } = await supabase
       .from('daily_plans')
-      .insert(planData)
+      .upsert(planData, { onConflict: 'user_id, plan_date' })
       .select()
       .single();
 
-    if (insertError) {
-      console.error('Insert error:', insertError);
+    if (upsertError) {
+      console.error('Upsert error:', upsertError);
+
+      // In case of race condition or conflict, return existing plan
+      const { data: existingPlanAfterError } = await supabase
+        .from('daily_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('plan_date', today)
+        .maybeSingle();
+
+      if (existingPlanAfterError) {
+        console.log('Plan already exists for today');
+        return new Response(
+          JSON.stringify(existingPlanAfterError),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ error: 'Failed to create plan' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
