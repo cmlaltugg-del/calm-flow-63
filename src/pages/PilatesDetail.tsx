@@ -98,7 +98,7 @@ const PilatesDetail = () => {
               )}
 
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Nasıl Yapılır:</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">How to Perform:</h3>
                 <p className="text-foreground leading-relaxed">{exercise.instructions}</p>
               </div>
             </Card>
