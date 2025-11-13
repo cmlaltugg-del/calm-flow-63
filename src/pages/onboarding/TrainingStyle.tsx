@@ -54,14 +54,8 @@ const TrainingStyle = () => {
 
   const handleContinue = () => {
     sessionStorage.setItem("trainingStyles", JSON.stringify(selected));
-    
-    // If gym is selected, continue with height/weight flow
-    if (selected.includes("gym")) {
-      navigate("/onboarding/height-weight");
-    } else {
-      // For pilates/yoga only, skip to intensity selection
-      navigate("/onboarding/intensity");
-    }
+    // All users need height/weight for calorie calculation and meal recommendations
+    navigate("/onboarding/height-weight");
   };
 
   return (
