@@ -4,19 +4,38 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Scale, Activity, Heart } from "lucide-react";
 
-const goals = [
-  { id: "lose_weight", label: "Lose Weight", Icon: Scale },
-  { id: "gain_muscle", label: "Gain Muscle", Icon: Activity },
-  { id: "maintain", label: "Maintain", Icon: Heart },
-];
-
 const Goals = () => {
   const navigate = useNavigate();
   const [selectedGoal, setSelectedGoal] = useState<string>("");
 
+  // Check training styles to determine which goals to show
+  const trainingStyles = JSON.parse(sessionStorage.getItem("trainingStyles") || "[]");
+  const hasGymOrHome = trainingStyles.includes("gym") || trainingStyles.includes("home");
+  const isYogaPilatesOnly = !hasGymOrHome && (trainingStyles.includes("yoga") || trainingStyles.includes("pilates"));
+
+  // Dynamic goals based on training style
+  const goals = isYogaPilatesOnly ? [
+    { id: "lose_weight", label: "Lose Weight", Icon: Scale },
+    { id: "tone_flexibility", label: "Tone & Flexibility", Icon: Activity },
+    { id: "maintain", label: "Maintain", Icon: Heart },
+  ] : [
+    { id: "lose_weight", label: "Lose Weight", Icon: Scale },
+    { id: "gain_muscle", label: "Gain Muscle", Icon: Activity },
+    { id: "maintain", label: "Maintain", Icon: Heart },
+  ];
+
   const handleContinue = () => {
     sessionStorage.setItem("goal", selectedGoal);
-    navigate("/onboarding/workout-mode");
+    
+    if (hasGymOrHome) {
+      // Users with gym/home workout continue to workout mode
+      navigate("/onboarding/workout-mode");
+    } else {
+      // Yoga/Pilates only users skip workout mode and go to dashboard
+      sessionStorage.setItem("workoutMode", "home");
+      sessionStorage.setItem("onboardingComplete", "true");
+      navigate("/dashboard");
+    }
   };
 
   return (
