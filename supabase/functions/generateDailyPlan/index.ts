@@ -346,6 +346,8 @@ Deno.serve(async (req) => {
       exercise_instructions: mainExercise?.instructions || 'No exercise planned for today',
       reps_or_duration: mainExercise?.reps_or_duration || 'N/A',
       yoga_title: randomYoga?.title || 'No Yoga',
+      yoga_duration_minutes: randomYoga?.duration_minutes || 0,
+      pilates_duration_minutes: pilatesWorkout?.duration_minutes || 0,
       meal_title: randomMeal?.title || 'No Meal Plan',
     };
 
