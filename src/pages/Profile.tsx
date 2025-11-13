@@ -223,6 +223,28 @@ const Profile = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Your Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-primary">{profile.current_streak || 0}</p>
+                <p className="text-xs text-muted-foreground">Day Streak</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-primary">{profile.longest_streak || 0}</p>
+                <p className="text-xs text-muted-foreground">Best Streak</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-primary">{profile.total_workouts_completed || 0}</p>
+                <p className="text-xs text-muted-foreground">Total Workouts</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Calculated Targets</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
