@@ -10,6 +10,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/SignupModal";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { StreakCounter } from "@/components/StreakCounter";
+import { DailyProgressCard } from "@/components/DailyProgressCard";
+import { WeeklySummaryCard } from "@/components/WeeklySummaryCard";
+import { WaterProgressBar } from "@/components/WaterProgressBar";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,26 +27,36 @@ const Dashboard = () => {
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [signupCardSource, setSignupCardSource] = useState<string>('');
   const [profile, setProfile] = useState<any>(null);
+  const [weeklyStats, setWeeklyStats] = useState({ workouts: 0, calories: 0, goalPercentage: 0 });
 
   const dailyWaterTarget = dailyPlan?.daily_water_target_liters || 2.5;
-  const waterProgress = (waterIntake / dailyWaterTarget) * 100;
 
   useEffect(() => {
     if (authLoading) return;
-
     const onboardingComplete = sessionStorage.getItem('onboardingComplete');
-
     if (user) {
-      // Authenticated user - fetch real plan
       fetchDailyPlan();
+      fetchWeeklyStats();
     } else if (onboardingComplete === 'true') {
-      // Not logged in but onboarding complete - show preview
       generatePreviewPlan();
     } else {
-      // Not logged in and no onboarding - redirect to start
       navigate('/onboarding/height-weight');
     }
   }, [user, authLoading, navigate]);
+
+  const fetchWeeklyStats = async () => {
+    if (!user) return;
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data } = await supabase.from('workout_history').select('calories_burned').eq('user_id', user.id).gte('completed_at', sevenDaysAgo.toISOString());
+      const totalWorkouts = data?.length || 0;
+      const totalCalories = data?.reduce((sum, w) => sum + (w.calories_burned || 0), 0) || 0;
+      setWeeklyStats({ workouts: totalWorkouts, calories: totalCalories, goalPercentage: Math.min(Math.round((totalWorkouts / 7) * 100), 100) });
+    } catch (error) {
+      console.error('Error fetching weekly stats:', error);
+    }
+  };
 
   const fetchDailyPlan = async () => {
     try {
@@ -413,36 +427,14 @@ const Dashboard = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background p-6 pb-24">
-        <div className="max-w-2xl mx-auto space-y-6">
-        {/* Greeting */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isPreview ? "Here's a preview of your personalized plan" : "Here's your personalized plan for today"}
-          </p>
+      <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-bold">Good Day! 👋</h1>
+          {!isPreview && profile && <StreakCounter currentStreak={profile.current_streak || 0} longestStreak={profile.longest_streak || 0} />}
         </div>
-
-        {/* Daily Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Progress</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Overall</span>
-              <span className="text-sm font-medium">{progressPercentage}%</span>
-            </div>
-            <Progress value={progressPercentage} />
-            {!isPreview && (
-              <p className="text-xs text-muted-foreground">
-                {completedTasks} of {totalTasks} tasks completed
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <DailyProgressCard completedCount={completedTasks} totalCount={totalTasks} isPreview={isPreview} />
+        {!isPreview && <WeeklySummaryCard weeklyWorkouts={weeklyStats.workouts} weeklyCalories={weeklyStats.calories} weeklyGoalPercentage={weeklyStats.goalPercentage} />}
+        <WaterProgressBar waterIntake={waterIntake} dailyTarget={dailyWaterTarget} onAddWater={addWater} loading={waterLoading} isPreview={isPreview} />
 
         {/* Targets Card - Only show for gym users */}
         {hasGym && (
@@ -738,36 +730,6 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Water Intake - UNLOCKED */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Water Intake
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">Stay hydrated throughout the day to optimize performance and recovery</p>
-                </TooltipContent>
-              </Tooltip>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Target</span>
-              <span className="text-sm font-medium">{dailyWaterTarget}L</span>
-            </div>
-            <Progress value={waterProgress} />
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold">{waterIntake.toFixed(2)}L</span>
-              <Button onClick={addWater} size="sm" disabled={waterLoading || isPreview}>
-                {waterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '+0.25L'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Today's Meal - Show if data exists and user has gym */}
         {todayMeal && (
           <Card className="relative overflow-hidden">
@@ -828,43 +790,42 @@ const Dashboard = () => {
             )}
           </Card>
         )}
-      </div>
 
-      <SignupModal 
-        open={signupModalOpen}
-        onOpenChange={setSignupModalOpen}
-        onSignupSuccess={handleSignupSuccess}
-        cardSource={signupCardSource}
-      />
+        <SignupModal 
+          open={signupModalOpen}
+          onOpenChange={setSignupModalOpen}
+          onSignupSuccess={handleSignupSuccess}
+          cardSource={signupCardSource}
+        />
 
-      {/* Bottom Navigation */}
-      {!isPreview && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
-          <div className="max-w-md mx-auto flex items-center justify-around py-3">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex flex-col items-center gap-1 text-primary"
-            >
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <User className="h-5 w-5" />
-              <span className="text-xs">Profile</span>
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-              <span className="text-xs">Settings</span>
-            </button>
+        {/* Bottom Navigation */}
+        {!isPreview && (
+          <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+            <div className="max-w-md mx-auto flex items-center justify-around py-3">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex flex-col items-center gap-1 text-primary"
+              >
+                <Home className="h-5 w-5" />
+                <span className="text-xs">Home</span>
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <User className="h-5 w-5" />
+                <span className="text-xs">Profile</span>
+              </button>
+              <button
+                onClick={() => navigate('/settings')}
+                className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings className="h-5 w-5" />
+                <span className="text-xs">Settings</span>
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </TooltipProvider>
   );
