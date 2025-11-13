@@ -82,6 +82,70 @@ Deno.serve(async (req) => {
 
     if (existingPlan) {
       console.log('Plan already exists for today');
+      
+      // Check if targets are missing and patch them if needed
+      if (existingPlan.calorie_target === null || existingPlan.protein_target_g === null) {
+        console.log('Patching missing targets in existing plan');
+        
+        const weightNum = profile.weight;
+        const heightNum = profile.height;
+        const ageNum = profile.age;
+        const targetWeightNum = profile.target_weight_kg;
+        
+        if (weightNum && heightNum && ageNum) {
+          // Calculate BMR
+          let bmr;
+          if (profile.gender === 'male') {
+            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum + 5;
+          } else {
+            bmr = 10 * weightNum + 6.25 * heightNum - 5 * ageNum - 161;
+          }
+          
+          // Activity factor based on training style
+          let activityFactor = 1.45;
+          if (hasGym) activityFactor = 1.55;
+          else if (hasYoga) activityFactor = 1.40;
+          else if (hasPilates) activityFactor = 1.45;
+          else if (hasHome) activityFactor = 1.50;
+          
+          const tdee = Math.round(bmr * activityFactor);
+          
+          const goal = profile.goal || 'maintain';
+          let calorie_target;
+          if (goal === 'lose_weight') {
+            calorie_target = tdee - 500;
+          } else if (goal === 'gain_muscle') {
+            calorie_target = tdee + 250;
+          } else {
+            calorie_target = tdee;
+          }
+          calorie_target = Math.max(calorie_target, 1200);
+          
+          const protein_target_g = Math.round(1.6 * (targetWeightNum || weightNum));
+          
+          // Update the plan with targets
+          const { data: updatedPlan, error: updateError } = await supabase
+            .from('daily_plans')
+            .update({
+              calorie_target,
+              protein_target_g,
+            })
+            .eq('id', existingPlan.id)
+            .select()
+            .single();
+          
+          if (updateError) {
+            console.error('Error updating plan targets:', updateError);
+          } else {
+            console.log('Successfully patched plan targets');
+            return new Response(JSON.stringify(updatedPlan), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            });
+          }
+        }
+      }
+      
       return new Response(
         JSON.stringify(existingPlan),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -485,8 +549,8 @@ Deno.serve(async (req) => {
       planData.pilates_exercises_json = pilatesExercises;
     }
 
-    // Add calorie/protein targets if strength training user
-    if (hasStrength) {
+    // Add calorie/protein targets for all users
+    if (calorie_target !== null && protein_target_g !== null) {
       planData.calorie_target = calorie_target;
       planData.protein_target_g = protein_target_g;
     }

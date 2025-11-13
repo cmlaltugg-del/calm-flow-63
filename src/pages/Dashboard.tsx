@@ -214,10 +214,19 @@ const Dashboard = () => {
           has_yoga: !!data.yoga_title,
           has_pilates: !!data.pilates_title,
           yoga_title: data.yoga_title,
-          pilates_title: data.pilates_title
+          pilates_title: data.pilates_title,
+          calorie_target: data.calorie_target,
+          protein_target_g: data.protein_target_g
         });
-        setDailyPlan(data);
-        setIsPreview(false);
+        
+        // If targets are missing, regenerate to patch them
+        if (data.calorie_target === null || data.protein_target_g === null) {
+          console.log('Targets missing, regenerating plan to patch');
+          await generateNewPlan();
+        } else {
+          setDailyPlan(data);
+          setIsPreview(false);
+        }
       }
     } catch (error) {
       console.error('Error fetching daily plan:', error);
@@ -463,7 +472,7 @@ const Dashboard = () => {
         <WaterProgressBar waterIntake={waterIntake} dailyTarget={dailyWaterTarget} onAddWater={addWater} loading={waterLoading} isPreview={isPreview} />
 
         {/* Targets Card - Show for all users with calculated targets */}
-        {(dailyPlan?.calorie_target || dailyPlan?.protein_target_g) && (
+        {(dailyPlan?.calorie_target || dailyPlan?.protein_target_g || profile?.daily_calories || profile?.protein_target) && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -488,7 +497,7 @@ const Dashboard = () => {
                     <span>Daily Calories</span>
                   </div>
                   <p className="text-2xl font-bold">
-                    {(isPreview ? dailyPlan?.calorie_target : profile?.daily_calories) || '—'} kcal
+                    {(dailyPlan?.calorie_target ?? profile?.daily_calories) || '—'} kcal
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -497,7 +506,7 @@ const Dashboard = () => {
                     <span>Protein Target</span>
                   </div>
                   <p className="text-2xl font-bold">
-                    {(isPreview ? dailyPlan?.protein_target_g : profile?.protein_target) || '—'} g
+                    {(dailyPlan?.protein_target_g ?? profile?.protein_target) || '—'} g
                   </p>
                 </div>
                 <div className="space-y-1">

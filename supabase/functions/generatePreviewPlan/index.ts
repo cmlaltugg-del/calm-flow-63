@@ -282,8 +282,8 @@ Deno.serve(async (req) => {
       plan.pilates_exercises_json = pilatesExercises;
     }
 
-    // Add calorie/protein targets (only for strength training users)
-    if (hasStrength) {
+    // Add calorie/protein targets for all users
+    if (calorieTarget !== null && proteinTarget !== null) {
       plan.calorie_target = calorieTarget;
       plan.protein_target_g = proteinTarget;
     }
