@@ -200,7 +200,8 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-center">Create your free account</DialogTitle>
+          <DialogTitle className="text-2xl text-center">Join NIA</DialogTitle>
+          <p className="text-center text-muted-foreground text-sm mt-2">Start your intelligent training journey</p>
         </DialogHeader>
         
         <form onSubmit={handleEmailSignup} className="space-y-4">

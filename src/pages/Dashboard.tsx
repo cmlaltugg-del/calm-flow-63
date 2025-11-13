@@ -458,6 +458,14 @@ const Dashboard = () => {
       <TooltipProvider>
         <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6 animate-fade-in mb-safe">
         <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">N</span>
+              </div>
+              <span className="text-lg font-bold text-primary">NIA</span>
+            </div>
+          </div>
           <h1 className="text-2xl font-bold">{greeting}! 👋</h1>
           <p className="text-muted-foreground text-sm">{motivationalMsg}</p>
           {!isPreview && profile && <StreakCounter currentStreak={currentStreak} longestStreak={profile.longest_streak || 0} />}
