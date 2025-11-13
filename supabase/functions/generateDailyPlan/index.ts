@@ -67,16 +67,32 @@ Return ONLY valid JSON with this exact structure:
 
 // Generate personalized yoga session
 async function generateYoga(profile: any): Promise<any> {
+  const availablePoses = [
+    "Downward Dog", "Warrior I", "Warrior II", "Tree Pose", "Child's Pose",
+    "Cat-Cow Stretch", "Cobra Pose", "Pigeon Pose", "Triangle Pose", "Bridge Pose",
+    "Seated Forward Bend", "Corpse Pose", "Plank Pose", "Boat Pose", "Mountain Pose"
+  ];
+  
   const systemPrompt = `You are a certified yoga instructor. Generate a yoga session in JSON format.
 Return ONLY valid JSON with this exact structure:
 {
   "title": "Yoga Session Name",
-  "instructions": "Detailed pose sequence and breathing instructions (max 250 chars)",
-  "duration_minutes": 25
-}`;
+  "instructions": "Overall session flow and breathing guidance (max 200 chars)",
+  "duration_minutes": 25,
+  "poses": [
+    {
+      "name": "Pose Name (must be from available list)",
+      "duration": "2 mins",
+      "instructions": "Detailed instructions for this specific pose (max 100 chars)"
+    }
+  ]
+}
+
+Available poses: ${availablePoses.join(", ")}
+IMPORTANT: Use ONLY poses from the available list above. Include 5-7 poses.`;
 
   const intensity = profile.intensity || 'medium';
-  const prompt = `Create a ${intensity} intensity yoga session, duration 20-30 minutes. Focus on flexibility and mindfulness.`;
+  const prompt = `Create a ${intensity} intensity yoga session, 20-30 minutes total. Focus on flexibility and mindfulness. Include a warm-up, main flow, and cool-down.`;
 
   const aiResponse = await generateWithAI(prompt, systemPrompt);
   const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -87,19 +103,36 @@ Return ONLY valid JSON with this exact structure:
 
 // Generate personalized pilates workout
 async function generatePilates(profile: any): Promise<any> {
+  const availableExercises = [
+    "The Hundred", "Roll Up", "Single Leg Circle", "Rolling Like a Ball",
+    "Single Leg Stretch", "Double Leg Stretch", "Spine Stretch Forward", "Swan Dive",
+    "Single Straight Leg", "Criss Cross", "Teaser", "Swimming",
+    "Leg Pull Front", "Side Kick Series", "Seal", "Shoulder Bridge"
+  ];
+  
   const systemPrompt = `You are a certified pilates instructor. Generate a pilates workout in JSON format.
 Return ONLY valid JSON with this exact structure:
 {
   "title": "Pilates Workout Name",
-  "instructions": "Exercise sequence with focus points (max 250 chars)",
-  "duration_minutes": 25
-}`;
+  "instructions": "Overall workout focus and breathing cues (max 200 chars)",
+  "duration_minutes": 25,
+  "exercises": [
+    {
+      "name": "Exercise Name (must be from available list)",
+      "duration": "3 mins",
+      "instructions": "Detailed execution steps for this exercise (max 100 chars)"
+    }
+  ]
+}
+
+Available exercises: ${availableExercises.join(", ")}
+IMPORTANT: Use ONLY exercises from the available list above. Include 6-8 exercises.`;
 
   const intensity = profile.intensity || 'medium';
   const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
   const level = levelMap[intensity] || 'intermediate';
 
-  const prompt = `Create a ${level} pilates workout, 20-30 minutes. Focus on core strength and stability.`;
+  const prompt = `Create a ${level} pilates workout, 20-30 minutes total. Focus on core strength, stability and controlled movements.`;
 
   const aiResponse = await generateWithAI(prompt, systemPrompt);
   const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -110,21 +143,44 @@ Return ONLY valid JSON with this exact structure:
 
 // Generate personalized strength exercise
 async function generateExercise(profile: any, equipmentType: 'gym' | 'home'): Promise<any> {
-  const systemPrompt = `You are a certified personal trainer. Generate a strength training exercise in JSON format.
+  const gymExercises = [
+    "Push-ups", "Squats", "Plank", "Lunges", "Burpees", "Mountain Climbers",
+    "Bench Press", "Deadlift", "Shoulder Press", "Bicep Curls", "Tricep Dips",
+    "Lat Pulldown", "Leg Press", "Chest Fly", "Russian Twists", "Leg Raises"
+  ];
+  
+  const homeExercises = [
+    "Push-ups", "Squats", "Plank", "Lunges", "Burpees", "Mountain Climbers",
+    "Jumping Jacks", "Russian Twists", "Leg Raises", "Bicycle Crunches"
+  ];
+  
+  const availableExercises = equipmentType === 'gym' ? gymExercises : homeExercises;
+  
+  const systemPrompt = `You are a certified personal trainer. Generate a strength training workout in JSON format.
 Return ONLY valid JSON with this exact structure:
 {
-  "title": "Exercise Name",
-  "instructions": "Proper form and execution steps (max 200 chars)",
-  "sets": 4,
-  "reps": "10-12"
-}`;
+  "title": "Workout Name",
+  "instructions": "Overall workout guidance and form tips (max 200 chars)",
+  "total_calories": 350,
+  "exercises": [
+    {
+      "name": "Exercise Name (must be from available list)",
+      "reps_or_duration": "3 sets x 12 reps",
+      "calories": 80,
+      "instructions": "Detailed form and execution (max 100 chars)"
+    }
+  ]
+}
+
+Available exercises: ${availableExercises.join(", ")}
+IMPORTANT: Use ONLY exercises from the available list above. Include 5-6 exercises. Total calories should be 300-400.`;
 
   const equipment = equipmentType === 'gym' ? 'gym equipment (barbells, machines)' : 'bodyweight or minimal home equipment';
   const intensity = profile.intensity || 'medium';
   const levelMap: Record<string, string> = { low: 'beginner', medium: 'intermediate', high: 'advanced' };
   const level = levelMap[intensity] || 'intermediate';
 
-  const prompt = `Create a ${level} strength exercise using ${equipment}. Focus on major muscle groups.`;
+  const prompt = `Create a ${level} full-body strength workout using ${equipment}. Target major muscle groups with proper progression.`;
 
   const aiResponse = await generateWithAI(prompt, systemPrompt);
   const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -346,7 +402,9 @@ Deno.serve(async (req) => {
       
       exercise_title: exercise?.title || null,
       exercise_instructions: exercise?.instructions || null,
-      reps_or_duration: exercise?.reps || exercise?.sets ? `${exercise.sets} sets x ${exercise.reps} reps` : 'N/A',
+      reps_or_duration: exercise ? 'N/A' : 'N/A',
+      exercises_json: exercise?.exercises || null,
+      total_exercise_calories: exercise?.total_calories || null,
       
       meal_title: meal?.title || null,
       meal_instructions: meal?.instructions || null,
@@ -356,10 +414,12 @@ Deno.serve(async (req) => {
       yoga_title: yoga?.title || null,
       yoga_instructions: yoga?.instructions || null,
       yoga_duration_minutes: yoga?.duration_minutes || 0,
+      yoga_poses_json: yoga?.poses || null,
       
       pilates_title: pilates?.title || null,
       pilates_instructions: pilates?.instructions || null,
       pilates_duration_minutes: pilates?.duration_minutes || 0,
+      pilates_exercises_json: pilates?.exercises || null,
     };
 
     console.log('Upserting AI-generated plan to database');
