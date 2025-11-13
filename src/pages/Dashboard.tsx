@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Loader2, Lock, Target, Flame, Beef, Droplets, Home, User, Settings } from "lucide-react";
+import { Dumbbell, Loader2, Lock, Target, Flame, Beef, Droplets, Home, User, Settings, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SignupModal } from "@/components/SignupModal";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -362,8 +363,9 @@ const Dashboard = () => {
   const progressPercentage = isPreview ? 25 : Math.round((completedTasks / totalTasks) * 100);
 
   return (
-    <div className="min-h-screen bg-background p-6 pb-24">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <TooltipProvider>
+      <div className="min-h-screen bg-background p-6 pb-24">
+        <div className="max-w-2xl mx-auto space-y-6">
         {/* Greeting */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-foreground">
@@ -460,6 +462,14 @@ const Dashboard = () => {
               <CardTitle className="flex items-center gap-2">
                 <Dumbbell className="h-5 w-5" />
                 Today's Exercise
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">Complete your strength training exercises to build muscle and increase calorie burn</p>
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -526,7 +536,17 @@ const Dashboard = () => {
             )}
             <div className={isPreview ? "filter blur-[4px] opacity-95" : ""}>
               <CardHeader>
-                <CardTitle>Today's Pilates</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  Today's Pilates
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">Improve your core strength, flexibility and posture with targeted pilates movements</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -599,7 +619,17 @@ const Dashboard = () => {
             )}
             <div className={isPreview ? "filter blur-[4px] opacity-95" : ""}>
               <CardHeader>
-                <CardTitle>Today's Yoga</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  Today's Yoga
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">Enhance flexibility, reduce stress and improve mind-body connection through yoga practice</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -662,7 +692,17 @@ const Dashboard = () => {
         {/* Water Intake - UNLOCKED */}
         <Card>
           <CardHeader>
-            <CardTitle>Water Intake</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Water Intake
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">Stay hydrated throughout the day to optimize performance and recovery</p>
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -692,7 +732,17 @@ const Dashboard = () => {
             )}
             <div className={isPreview ? "filter blur-[4px] opacity-95" : ""}>
               <CardHeader>
-                <CardTitle>Today's Meal</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  Today's Meal
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help ml-auto" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">Follow your personalized meal plan to meet your calorie and protein targets</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -766,7 +816,8 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 
