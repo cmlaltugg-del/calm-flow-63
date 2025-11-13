@@ -1,23 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle } from "lucide-react";
+import { getMotivationalMessage } from "@/lib/greetings";
 
 interface DailyProgressCardProps {
   completedCount: number;
   totalCount: number;
   isPreview?: boolean;
+  currentStreak?: number;
 }
 
-export const DailyProgressCard = ({ completedCount, totalCount, isPreview }: DailyProgressCardProps) => {
+export const DailyProgressCard = ({ completedCount, totalCount, isPreview, currentStreak = 0 }: DailyProgressCardProps) => {
   const percentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   
-  const getMessage = () => {
-    if (isPreview) return "Complete your signup to track progress!";
-    if (percentage === 0) return "Let's start your day strong! 💪";
-    if (percentage < 50) return "Great start! Keep going! 🌟";
-    if (percentage < 100) return "Almost there! You're doing amazing! 🔥";
-    return "Perfect day! You crushed it! 🎉";
-  };
+  const message = isPreview 
+    ? "Complete your signup to track progress!"
+    : getMotivationalMessage(currentStreak, percentage);
 
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
@@ -29,7 +27,7 @@ export const DailyProgressCard = ({ completedCount, totalCount, isPreview }: Dai
       </CardHeader>
       <CardContent className="space-y-3">
         <Progress value={percentage} className="h-3" />
-        <p className="text-sm text-muted-foreground">{getMessage()}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-success" />

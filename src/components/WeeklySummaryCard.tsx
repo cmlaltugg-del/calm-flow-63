@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Flame, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getWeeklyEncouragement } from "@/lib/greetings";
 
 interface WeeklySummaryCardProps {
   weeklyWorkouts: number;
@@ -13,6 +14,8 @@ export const WeeklySummaryCard = ({
   weeklyCalories, 
   weeklyGoalPercentage 
 }: WeeklySummaryCardProps) => {
+  const encouragement = getWeeklyEncouragement(weeklyWorkouts, weeklyGoalPercentage);
+  
   return (
     <Card className="bg-gradient-to-br from-info/5 to-info/10 border-info/20">
       <CardHeader className="pb-3">
@@ -20,6 +23,7 @@ export const WeeklySummaryCard = ({
           <Trophy className="w-5 h-5 text-info" />
           This Week's Stats
         </CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">{encouragement}</p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-4">

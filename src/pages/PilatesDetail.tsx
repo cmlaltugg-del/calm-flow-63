@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { triggerCelebration } from "@/lib/celebration";
 
 const PilatesDetail = () => {
   const location = useLocation();
@@ -35,12 +36,16 @@ const PilatesDetail = () => {
 
       if (error) throw error;
 
+      // Trigger celebration animation
+      triggerCelebration('workout');
+
       toast({
-        title: "Great job!",
-        description: "Pilates session marked as complete.",
+        title: "Excellent! 🎉",
+        description: "Pilates session completed! Amazing work!",
       });
 
-      navigate("/dashboard");
+      // Small delay to show confetti before navigation
+      setTimeout(() => navigate("/dashboard"), 500);
     } catch (error: any) {
       toast({
         title: "Error",

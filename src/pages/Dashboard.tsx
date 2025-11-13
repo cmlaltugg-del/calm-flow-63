@@ -14,6 +14,9 @@ import { StreakCounter } from "@/components/StreakCounter";
 import { DailyProgressCard } from "@/components/DailyProgressCard";
 import { WeeklySummaryCard } from "@/components/WeeklySummaryCard";
 import { WaterProgressBar } from "@/components/WaterProgressBar";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
+import { getTimeBasedGreeting, getMotivationalMessage } from "@/lib/greetings";
+import { triggerStreakCelebration } from "@/lib/celebration";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -73,8 +76,8 @@ const Dashboard = () => {
       if (profileError) {
         console.error('Error fetching profile:', profileError);
         toast({
-          title: "Error loading profile",
-          description: "Please try refreshing the page.",
+          title: "Connection Issue",
+          description: "Unable to load your profile. Check your connection and refresh.",
           variant: "destructive",
         });
         setLoading(false);
@@ -368,8 +371,8 @@ const Dashboard = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto">
+        <DashboardSkeleton />
       </div>
     );
   }
@@ -425,14 +428,25 @@ const Dashboard = () => {
   const totalTasks = 3;
   const progressPercentage = isPreview ? 25 : Math.round((completedTasks / totalTasks) * 100);
 
+  // Get personalized messages
+  const greeting = getTimeBasedGreeting();
+  const currentStreak = profile?.current_streak || 0;
+  const motivationalMsg = getMotivationalMessage(currentStreak, progressPercentage);
+
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6">
+      <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6 animate-fade-in">
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold">Good Day! 👋</h1>
-          {!isPreview && profile && <StreakCounter currentStreak={profile.current_streak || 0} longestStreak={profile.longest_streak || 0} />}
+          <h1 className="text-2xl font-bold">{greeting}! 👋</h1>
+          <p className="text-muted-foreground text-sm">{motivationalMsg}</p>
+          {!isPreview && profile && <StreakCounter currentStreak={currentStreak} longestStreak={profile.longest_streak || 0} />}
         </div>
-        <DailyProgressCard completedCount={completedTasks} totalCount={totalTasks} isPreview={isPreview} />
+        <DailyProgressCard 
+          completedCount={completedTasks} 
+          totalCount={totalTasks} 
+          isPreview={isPreview}
+          currentStreak={currentStreak}
+        />
         {!isPreview && <WeeklySummaryCard weeklyWorkouts={weeklyStats.workouts} weeklyCalories={weeklyStats.calories} weeklyGoalPercentage={weeklyStats.goalPercentage} />}
         <WaterProgressBar waterIntake={waterIntake} dailyTarget={dailyWaterTarget} onAddWater={addWater} loading={waterLoading} isPreview={isPreview} />
 
@@ -490,7 +504,12 @@ const Dashboard = () => {
 
         {/* Today's Exercise - Show only for gym users */}
         {trainingStyles.includes('gym') && todayExercise && (
-          <Card className="relative">
+          <Card className={`relative transition-all duration-300 ${dailyPlan?.is_completed_exercise ? 'opacity-70' : ''}`}>
+            {dailyPlan?.is_completed_exercise && !isPreview && (
+              <Badge className="absolute top-3 right-3 z-10 bg-success hover:bg-success text-success-foreground">
+                ✓ Completed
+              </Badge>
+            )}
             {isPreview && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
                 <Button onClick={() => handleUnlock('exercise')} size="lg" className="gap-2">
@@ -566,7 +585,12 @@ const Dashboard = () => {
 
         {/* Today's Pilates - Show if there's pilates data */}
         {todayPilates && (
-          <Card className="relative overflow-hidden">
+          <Card className={`relative overflow-hidden transition-all duration-300 ${dailyPlan?.is_completed_pilates ? 'opacity-70' : ''}`}>
+            {dailyPlan?.is_completed_pilates && !isPreview && (
+              <Badge className="absolute top-3 right-3 z-10 bg-success hover:bg-success text-success-foreground">
+                ✓ Completed
+              </Badge>
+            )}
             {isPreview && (
               <>
                 <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-sm rounded-full p-1.5 border border-border">
@@ -649,7 +673,12 @@ const Dashboard = () => {
 
         {/* Today's Yoga - Show if there's yoga data */}
         {todayYoga && (
-          <Card className="relative overflow-hidden">
+          <Card className={`relative overflow-hidden transition-all duration-300 ${dailyPlan?.is_completed_yoga ? 'opacity-70' : ''}`}>
+            {dailyPlan?.is_completed_yoga && !isPreview && (
+              <Badge className="absolute top-3 right-3 z-10 bg-success hover:bg-success text-success-foreground">
+                ✓ Completed
+              </Badge>
+            )}
             {isPreview && (
               <>
                 <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-sm rounded-full p-1.5 border border-border">
@@ -732,7 +761,12 @@ const Dashboard = () => {
 
         {/* Today's Meal - Show if data exists and user has gym */}
         {todayMeal && (
-          <Card className="relative overflow-hidden">
+          <Card className={`relative overflow-hidden transition-all duration-300 ${dailyPlan?.is_completed_meal ? 'opacity-70' : ''}`}>
+            {dailyPlan?.is_completed_meal && !isPreview && (
+              <Badge className="absolute top-3 right-3 z-10 bg-success hover:bg-success text-success-foreground">
+                ✓ Completed
+              </Badge>
+            )}
             {isPreview && (
               <>
                 <div className="absolute top-3 right-3 z-10 bg-background/90 backdrop-blur-sm rounded-full p-1.5 border border-border">
