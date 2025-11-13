@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Dumbbell, Home, Flower2, Activity } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const trainingOptions = [
-  { id: "gym", label: "Gym", emoji: "🏋️" },
-  { id: "home", label: "Home Workout", emoji: "🏠" },
-  { id: "yoga", label: "Yoga", emoji: "🧘" },
-  { id: "pilates", label: "Pilates", emoji: "🧎‍♀️" },
+const trainingOptions: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: "gym", label: "Gym", icon: Dumbbell },
+  { id: "home", label: "Home Workout", icon: Home },
+  { id: "yoga", label: "Yoga", icon: Flower2 },
+  { id: "pilates", label: "Pilates", icon: Activity },
 ];
 
 const TrainingStyle = () => {
@@ -44,21 +46,29 @@ const TrainingStyle = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {trainingOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => toggleSelection(opt.id)}
-                className={cn(
-                  "w-full h-28 flex flex-col justify-center items-center rounded-2xl border transition-all",
-                  selected.includes(opt.id)
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-card hover:bg-accent"
-                )}
-              >
-                <div className="text-3xl">{opt.emoji}</div>
-                <div className="font-medium mt-1">{opt.label}</div>
-              </button>
-            ))}
+            {trainingOptions.map((opt) => {
+              const IconComponent = opt.icon;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => toggleSelection(opt.id)}
+                  className={cn(
+                    "w-full h-28 flex flex-col justify-center items-center rounded-2xl border transition-all",
+                    selected.includes(opt.id)
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:bg-accent"
+                  )}
+                >
+                  <IconComponent 
+                    className={cn(
+                      "w-10 h-10",
+                      selected.includes(opt.id) ? "text-primary" : "text-foreground"
+                    )} 
+                  />
+                  <div className="font-medium mt-2">{opt.label}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
