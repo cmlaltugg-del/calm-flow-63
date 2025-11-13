@@ -85,8 +85,6 @@ const Profile = () => {
           age: parseInt(profile.age) || null,
           gender: profile.gender || null,
           workout_mode: profile.workout_mode || null,
-          daily_calories: parseInt(profile.daily_calories) || null,
-          protein_target: parseInt(profile.protein_target) || null,
         })
         .eq('user_id', user!.id);
 
@@ -94,7 +92,7 @@ const Profile = () => {
 
       toast({
         title: "Success",
-        description: "Profile updated successfully",
+        description: "Profile updated successfully. Nutritional targets will be recalculated in Settings.",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -234,9 +232,10 @@ const Profile = () => {
                 id="daily_calories"
                 type="number"
                 value={profile.daily_calories}
-                onChange={(e) => setProfile({ ...profile, daily_calories: e.target.value })}
-                placeholder="2000"
+                placeholder="Calculated automatically"
+                disabled
               />
+              <p className="text-xs text-muted-foreground">This value is calculated automatically in Settings based on your height, weight, age, gender, and goals.</p>
             </div>
 
             <div className="space-y-2">
@@ -245,9 +244,10 @@ const Profile = () => {
                 id="protein_target"
                 type="number"
                 value={profile.protein_target}
-                onChange={(e) => setProfile({ ...profile, protein_target: e.target.value })}
-                placeholder="140"
+                placeholder="Calculated automatically"
+                disabled
               />
+              <p className="text-xs text-muted-foreground">This value is calculated automatically in Settings based on your weight and training style.</p>
             </div>
           </CardContent>
         </Card>
