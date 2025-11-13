@@ -16,8 +16,19 @@ const YogaDetail = () => {
   const { toast } = useToast();
   const [isCompleting, setIsCompleting] = useState(false);
 
+  // Parse poses from JSON if it's a string
+  let parsedPoses = poses;
+  if (typeof poses === 'string') {
+    try {
+      parsedPoses = JSON.parse(poses);
+    } catch (e) {
+      console.error('Failed to parse poses:', e);
+      parsedPoses = null;
+    }
+  }
+
   // Use poses array if available, otherwise fall back to instructions
-  const posesList = poses || [{ pose_name: 'Full Session', instructions: instructions || 'No instructions available' }];
+  const posesList = parsedPoses || [{ name: 'Full Session', instructions: instructions || 'No instructions available' }];
 
   const handleMarkComplete = async () => {
     if (!planId) {
@@ -79,7 +90,8 @@ const YogaDetail = () => {
 
         <div className="space-y-4">
           {posesList.map((pose: any, index: number) => {
-            const gifUrl = pose.gif_url || findGifByName(pose.pose_name, 'yoga');
+            const poseName = pose.name || pose.pose_name;
+            const gifUrl = pose.gif_url || findGifByName(poseName, 'yoga');
             
             return (
               <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
@@ -88,7 +100,8 @@ const YogaDetail = () => {
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-lg font-medium">{pose.pose_name}</h2>
+                    <h2 className="text-lg font-medium">{poseName}</h2>
+                    {pose.duration && <p className="text-sm text-muted-foreground mt-1">{pose.duration}</p>}
                   </div>
                 </div>
                 
@@ -96,7 +109,7 @@ const YogaDetail = () => {
                   <div className="rounded-2xl overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
                     <img 
                       src={gifUrl} 
-                      alt={`${pose.pose_name} demonstration`}
+                      alt={`${poseName} demonstration`}
                       className="w-full h-full object-contain"
                       loading="lazy"
                     />
