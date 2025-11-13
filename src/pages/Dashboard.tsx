@@ -447,8 +447,8 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Today's Exercise - Show if training_styles includes gym or pilates */}
-        {(trainingStyles.includes('gym') || trainingStyles.includes('pilates')) && todayExercise && (
+        {/* Today's Exercise - Show only for gym users */}
+        {trainingStyles.includes('gym') && todayExercise && (
           <Card className="relative">
             {isPreview && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
