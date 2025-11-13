@@ -119,15 +119,21 @@ Deno.serve(async (req) => {
         .lte('duration_minutes', 35)
         .limit(50);
 
-      if (yogaError || !yogaSessions || yogaSessions.length === 0) {
-        console.error('Yoga fetch error:', yogaError);
-        return new Response(
-          JSON.stringify({ error: 'No yoga sessions available' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (yogaError) console.error('Yoga fetch error:', yogaError);
+      
+      if (yogaSessions && yogaSessions.length > 0) {
+        randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+      } else {
+        // Fallback yoga session when no data in database
+        console.log('Using fallback yoga session');
+        randomYoga = {
+          title: 'Gentle Yoga Flow',
+          instructions: 'Breathing focus. Cat-cow. Forward fold. Low lunge. Child\'s pose. Repeat calmly.',
+          duration_minutes: 20,
+          intensity_level: intensity,
+        };
       }
 
-      randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
       mainExercise = { title: randomYoga.title, instructions: randomYoga.instructions, reps_or_duration: `${randomYoga.duration_minutes} min` };
     }
     // CASE 2: Pilates only
@@ -176,8 +182,19 @@ Deno.serve(async (req) => {
         .lte('duration_minutes', 35)
         .limit(50);
 
-      if (!yogaError && yogaSessions && yogaSessions.length > 0) {
+      if (yogaError) console.error('Yoga fetch error:', yogaError);
+
+      if (yogaSessions && yogaSessions.length > 0) {
         randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+      } else {
+        // Fallback yoga session
+        console.log('Using fallback yoga session for yoga+pilates');
+        randomYoga = {
+          title: 'Quick Yoga Stretch',
+          instructions: 'Cat-cow. Forward fold. Spinal twist. Child\'s pose.',
+          duration_minutes: 15,
+          intensity_level: intensity,
+        };
       }
 
       // Get pilates session
@@ -270,8 +287,19 @@ Deno.serve(async (req) => {
           .lte('duration_minutes', 8)
           .limit(50);
 
-        if (!yogaError && yogaSessions && yogaSessions.length > 0) {
+        if (yogaError) console.error('Yoga cooldown fetch error:', yogaError);
+
+        if (yogaSessions && yogaSessions.length > 0) {
           randomYoga = yogaSessions[Math.floor(Math.random() * yogaSessions.length)];
+        } else {
+          // Fallback yoga cooldown
+          console.log('Using fallback yoga cooldown');
+          randomYoga = {
+            title: 'Quick Cooldown',
+            instructions: 'Child\'s pose. Cat-cow. Seated twist.',
+            duration_minutes: 5,
+            intensity_level: 'low',
+          };
         }
       }
     }
