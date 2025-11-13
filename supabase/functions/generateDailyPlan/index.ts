@@ -346,7 +346,7 @@ Deno.serve(async (req) => {
       
       exercise_title: exercise?.title || null,
       exercise_instructions: exercise?.instructions || null,
-      reps_or_duration: exercise?.reps || exercise?.sets ? `${exercise.sets} sets x ${exercise.reps} reps` : null,
+      reps_or_duration: exercise?.reps || exercise?.sets ? `${exercise.sets} sets x ${exercise.reps} reps` : 'N/A',
       
       meal_title: meal?.title || null,
       meal_instructions: meal?.instructions || null,
@@ -355,11 +355,11 @@ Deno.serve(async (req) => {
       
       yoga_title: yoga?.title || null,
       yoga_instructions: yoga?.instructions || null,
-      yoga_duration_minutes: yoga?.duration_minutes || null,
+      yoga_duration_minutes: yoga?.duration_minutes || 0,
       
       pilates_title: pilates?.title || null,
       pilates_instructions: pilates?.instructions || null,
-      pilates_duration_minutes: pilates?.duration_minutes || null,
+      pilates_duration_minutes: pilates?.duration_minutes || 0,
     };
 
     console.log('Upserting AI-generated plan to database');
