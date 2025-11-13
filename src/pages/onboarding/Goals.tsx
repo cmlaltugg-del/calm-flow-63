@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Scale, Activity, Heart } from "lucide-react";
+import OnboardingHeader from "@/components/OnboardingHeader";
 
 const Goals = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Goals = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 py-12">
       <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
+        <OnboardingHeader />
         <div className="flex-1 flex flex-col justify-center space-y-8">
           <div className="space-y-2">
             <h2 className="text-3xl font-light text-foreground">What's your goal?</h2>

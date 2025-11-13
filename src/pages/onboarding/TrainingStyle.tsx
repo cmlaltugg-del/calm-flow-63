@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dumbbell, Home, Flower2, Activity } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import OnboardingHeader from "@/components/OnboardingHeader";
 
 const trainingOptions: { 
   id: string; 
@@ -61,6 +62,7 @@ const TrainingStyle = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 py-12">
       <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
+        <OnboardingHeader />
         <div className="flex-1 flex flex-col justify-center space-y-8">
           <div className="space-y-2">
             <h2 className="text-3xl font-light text-foreground">Choose your training styles</h2>
