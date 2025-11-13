@@ -70,6 +70,63 @@ const Settings = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
+      
+      // Fetch existing profile data for calculations
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('age, goal, workout_mode, training_styles')
+        .eq('user_id', user!.id)
+        .single();
+      
+      const weight = parseFloat(profile.weight);
+      const height = parseFloat(profile.height);
+      const age = existingProfile?.age;
+      const gender = profile.gender;
+      const goal = existingProfile?.goal;
+      const workoutMode = existingProfile?.workout_mode;
+      const trainingStyles = existingProfile?.training_styles || [];
+      
+      let dailyCalories = null;
+      let proteinTarget = null;
+      
+      // Calculate daily calories and protein target if we have the required data
+      if (weight && height && age && gender) {
+        // Calculate BMR using Mifflin-St Jeor Equation
+        let bmr: number;
+        if (gender === 'male') {
+          bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else {
+          bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+        
+        // Activity multipliers based on workout mode
+        const activityMultipliers: { [key: string]: number } = {
+          'strength_training': 1.55,
+          'cardio': 1.725,
+          'mixed': 1.6375,
+        };
+        
+        const activityMultiplier = activityMultipliers[workoutMode || ''] || 1.2;
+        let tdee = bmr * activityMultiplier;
+        
+        // Adjust calories based on goal
+        if (goal === 'lose_weight') {
+          dailyCalories = Math.round(tdee - 500);
+        } else if (goal === 'gain_muscle') {
+          dailyCalories = Math.round(tdee + 300);
+        } else {
+          dailyCalories = Math.round(tdee);
+        }
+        
+        // Calculate protein target
+        const hasStrengthTraining = trainingStyles.includes('gym') || 
+                                    trainingStyles.includes('home') ||
+                                    workoutMode === 'strength_training';
+        
+        proteinTarget = Math.round(weight * (hasStrengthTraining ? 2.2 : 1.6));
+      }
+      
+      // Update profile with new values and calculated targets
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -77,6 +134,8 @@ const Settings = () => {
           weight: parseFloat(profile.weight) || null,
           target_weight_kg: parseFloat(profile.target_weight_kg) || null,
           gender: profile.gender || null,
+          daily_calories: dailyCalories,
+          protein_target: proteinTarget,
         })
         .eq('user_id', user!.id);
 
@@ -84,7 +143,9 @@ const Settings = () => {
 
       toast({
         title: "Success",
-        description: "Profile updated successfully",
+        description: dailyCalories 
+          ? "Profile and nutritional targets updated successfully" 
+          : "Profile updated successfully",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
