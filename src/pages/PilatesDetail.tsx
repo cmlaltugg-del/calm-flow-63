@@ -71,20 +71,35 @@ const PilatesDetail = () => {
 
         <div className="space-y-4">
           {exercisesList.map((exercise: any, index: number) => (
-            <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-3">
+            <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
                   {index + 1}
                 </div>
-                <div className="flex-1 space-y-2">
+                <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <h2 className="text-lg font-medium">{exercise.title}</h2>
                     {exercise.duration_minutes > 0 && (
                       <span className="text-sm text-muted-foreground">{exercise.duration_minutes} min</span>
                     )}
                   </div>
-                  <p className="text-muted-foreground">{exercise.instructions}</p>
                 </div>
+              </div>
+
+              {exercise.gif_url && (
+                <div className="rounded-2xl overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
+                  <img
+                    src={exercise.gif_url}
+                    alt={`${exercise.title} demonstration`}
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Nasıl Yapılır:</h3>
+                <p className="text-foreground leading-relaxed">{exercise.instructions}</p>
               </div>
             </Card>
           ))}

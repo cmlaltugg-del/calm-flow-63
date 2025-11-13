@@ -332,6 +332,26 @@ Deno.serve(async (req) => {
       return 'https://media.giphy.com/media/3o7btNhMBytxAM6YBa/giphy.gif';
     };
 
+    // Helper function to get GIF URL for pilates exercises
+    const getPilatesGif = (title: string): string => {
+      const map: Record<string, string> = {
+        'hundred': 'https://media.giphy.com/media/3o7TKy6vq3JCb52rS4/giphy.gif',
+        'roll up': 'https://media.giphy.com/media/3o6nUPf3JtYN8pGzPM/giphy.gif',
+        'single leg stretch': 'https://media.giphy.com/media/xT9IgpZrYwF0DLzLyw/giphy.gif',
+        'double leg stretch': 'https://media.giphy.com/media/3o7btSgJtP2r8AjhS8/giphy.gif',
+        'spine stretch': 'https://media.giphy.com/media/l0HlV5r9J9Q0pC8fO/giphy.gif',
+        'bridge': 'https://media.giphy.com/media/l0HlI6nMY0LBjQBTW/giphy.gif',
+        'side kick': 'https://media.giphy.com/media/3o7btQ9o5h5XnQn6CQ/giphy.gif',
+        'plank': 'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',
+        'swimming': 'https://media.giphy.com/media/3o7btN1m0pYhYq1VAI/giphy.gif',
+      };
+      const lower = title.toLowerCase();
+      for (const [k, url] of Object.entries(map)) {
+        if (lower.includes(k)) return url;
+      }
+      return 'https://media.giphy.com/media/3o7TKy6vq3JCb52rS4/giphy.gif';
+    };
+
     // Split yoga instructions into poses/steps
     const yogaPoses = randomYoga?.instructions ?
       randomYoga.instructions.split('.').filter((s: string) => s.trim()).map((pose: string, idx: number) => ({
@@ -426,7 +446,8 @@ Deno.serve(async (req) => {
         title: pilatesWorkout.title,
         instructions: pilatesWorkout.instructions,
         duration_minutes: pilatesWorkout.duration_minutes,
-        level: pilatesWorkout.level
+        level: pilatesWorkout.level,
+        gif_url: getPilatesGif(pilatesWorkout.title)
       }];
       planData.pilates_exercises_json = pilatesExercises;
     }
