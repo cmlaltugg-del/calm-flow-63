@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { triggerCelebration } from "@/lib/celebration";
+import { triggerHaptic } from "@/lib/haptics";
 
 const PilatesDetail = () => {
   const location = useLocation();
@@ -38,6 +39,7 @@ const PilatesDetail = () => {
 
       // Trigger celebration animation
       triggerCelebration('workout');
+      triggerHaptic('success');
 
       toast({
         title: "Excellent! 🎉",
@@ -58,7 +60,7 @@ const PilatesDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 mb-safe">
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         <Button
           variant="ghost"

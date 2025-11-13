@@ -17,6 +17,8 @@ import { WaterProgressBar } from "@/components/WaterProgressBar";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { getTimeBasedGreeting, getMotivationalMessage } from "@/lib/greetings";
 import { triggerStreakCelebration } from "@/lib/celebration";
+import PullToRefresh from "@/components/PullToRefresh";
+import { triggerHaptic } from "@/lib/haptics";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -433,9 +435,19 @@ const Dashboard = () => {
   const currentStreak = profile?.current_streak || 0;
   const motivationalMsg = getMotivationalMessage(currentStreak, progressPercentage);
 
+  const handleRefresh = async () => {
+    if (user) {
+      await Promise.all([fetchDailyPlan(), fetchWeeklyStats()]);
+    } else {
+      await generatePreviewPlan();
+    }
+    triggerHaptic("success");
+  };
+
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <PullToRefresh onRefresh={handleRefresh}>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background p-6 pb-24 max-w-2xl mx-auto space-y-6 animate-fade-in mb-safe">
         <div className="space-y-3">
           <h1 className="text-2xl font-bold">{greeting}! 👋</h1>
           <p className="text-muted-foreground text-sm">{motivationalMsg}</p>
@@ -564,16 +576,19 @@ const Dashboard = () => {
               {!isPreview && (
                 <Button 
                   className="w-full"
-                  onClick={() => navigate('/exercise-detail', { 
-                    state: { 
-                      title: todayExercise.title, 
-                      duration: todayExercise.duration,
-                      instructions: todayExercise.instructions,
-                      planId: todayExercise.planId,
-                      exercises: todayExercise.exercises,
-                      totalCalories: todayExercise.totalCalories
-                    } 
-                  })}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    navigate('/exercise-detail', { 
+                      state: { 
+                        title: todayExercise.title, 
+                        duration: todayExercise.duration,
+                        instructions: todayExercise.instructions,
+                        planId: todayExercise.planId,
+                        exercises: todayExercise.exercises,
+                        totalCalories: todayExercise.totalCalories
+                      } 
+                    });
+                  }}
                   disabled={dailyPlan?.is_completed_exercise}
                 >
                   {dailyPlan?.is_completed_exercise ? 'Completed ✓' : 'View Full Workout'}
@@ -642,15 +657,20 @@ const Dashboard = () => {
                 <Button 
                   className="w-full" 
                   disabled={isPreview || dailyPlan?.is_completed_pilates}
-                  onClick={() => !isPreview && navigate('/pilates-detail', {
-                    state: {
-                      title: todayPilates.title,
-                      duration: todayPilates.duration,
-                      instructions: todayPilates.instructions,
-                      planId: todayPilates.planId,
-                      exercises: todayPilates.exercises
+                  onClick={() => {
+                    if (!isPreview) {
+                      triggerHaptic("medium");
+                      navigate('/pilates-detail', {
+                        state: {
+                          title: todayPilates.title,
+                          duration: todayPilates.duration,
+                          instructions: todayPilates.instructions,
+                          planId: todayPilates.planId,
+                          exercises: todayPilates.exercises
+                        }
+                      });
                     }
-                  })}
+                  }}
                 >
                   {!isPreview && dailyPlan?.is_completed_pilates ? 'Completed ✓' : 'View Full Session'}
                 </Button>
@@ -730,15 +750,20 @@ const Dashboard = () => {
                 <Button 
                   className="w-full" 
                   disabled={isPreview || dailyPlan?.is_completed_yoga}
-                  onClick={() => !isPreview && navigate('/yoga-detail', {
-                    state: {
-                      title: todayYoga.title,
-                      duration: todayYoga.duration,
-                      instructions: todayYoga.instructions,
-                      planId: todayYoga.planId,
-                      poses: todayYoga.poses
+                  onClick={() => {
+                    if (!isPreview) {
+                      triggerHaptic("medium");
+                      navigate('/yoga-detail', {
+                        state: {
+                          title: todayYoga.title,
+                          duration: todayYoga.duration,
+                          instructions: todayYoga.instructions,
+                          planId: todayYoga.planId,
+                          poses: todayYoga.poses
+                        }
+                      });
                     }
-                  })}
+                  }}
                 >
                   {!isPreview && dailyPlan?.is_completed_yoga ? 'Completed ✓' : 'View Full Session'}
                 </Button>
@@ -796,15 +821,20 @@ const Dashboard = () => {
                 <Button 
                   className="w-full"
                   disabled={isPreview || dailyPlan?.is_completed_meal}
-                  onClick={() => !isPreview && navigate('/meal-detail', {
-                    state: {
-                      title: todayMeal.title,
-                      instructions: todayMeal.instructions,
-                      ingredients: todayMeal.ingredients,
-                      calories: todayMeal.calories,
-                      planId: todayMeal.planId
+                  onClick={() => {
+                    if (!isPreview) {
+                      triggerHaptic("medium");
+                      navigate('/meal-detail', {
+                        state: {
+                          title: todayMeal.title,
+                          instructions: todayMeal.instructions,
+                          ingredients: todayMeal.ingredients,
+                          calories: todayMeal.calories,
+                          planId: todayMeal.planId
+                        }
+                      });
                     }
-                  })}
+                  }}
                 >
                   {!isPreview && dailyPlan?.is_completed_meal ? 'Completed ✓' : 'View Meal'}
                 </Button>
@@ -862,6 +892,7 @@ const Dashboard = () => {
         )}
       </div>
     </TooltipProvider>
+    </PullToRefresh>
   );
 };
 

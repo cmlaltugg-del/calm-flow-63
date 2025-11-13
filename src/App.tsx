@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import TabBar from "@/components/TabBar";
+import { useLocation } from "react-router-dom";
 import Welcome from "./pages/Welcome";
 import HeightWeight from "./pages/onboarding/HeightWeight";
 import Gender from "./pages/onboarding/Gender";
@@ -27,6 +29,44 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const location = useLocation();
+  
+  // Hide TabBar on onboarding, welcome, and login pages
+  const hideTabBar = 
+    location.pathname === "/" ||
+    location.pathname.startsWith("/onboarding") ||
+    location.pathname === "/login";
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Welcome />} />
+        <Route path="/onboarding/height-weight" element={<HeightWeight />} />
+        <Route path="/onboarding/gender" element={<Gender />} />
+        <Route path="/onboarding/target-weight" element={<TargetWeight />} />
+        <Route path="/onboarding/age" element={<Age />} />
+        <Route path="/onboarding/goals" element={<Goals />} />
+        <Route path="/onboarding/training-style" element={<TrainingStyle />} />
+        <Route path="/onboarding/intensity" element={<Intensity />} />
+        <Route path="/onboarding/workout-mode" element={<WorkoutMode />} />
+        <Route path="/onboarding/water-preview" element={<WaterPreview />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/exercise-detail" element={<ExerciseDetail />} />
+        <Route path="/yoga-detail" element={<YogaDetail />} />
+        <Route path="/pilates-detail" element={<PilatesDetail />} />
+        <Route path="/meal-detail" element={<MealDetail />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/settings" element={<Settings />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {!hideTabBar && <TabBar />}
+    </>
+  );
+};
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -35,28 +75,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Welcome />} />
-              <Route path="/onboarding/height-weight" element={<HeightWeight />} />
-              <Route path="/onboarding/gender" element={<Gender />} />
-              <Route path="/onboarding/target-weight" element={<TargetWeight />} />
-              <Route path="/onboarding/age" element={<Age />} />
-              <Route path="/onboarding/goals" element={<Goals />} />
-              <Route path="/onboarding/training-style" element={<TrainingStyle />} />
-              <Route path="/onboarding/intensity" element={<Intensity />} />
-              <Route path="/onboarding/workout-mode" element={<WorkoutMode />} />
-              <Route path="/onboarding/water-preview" element={<WaterPreview />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/exercise-detail" element={<ExerciseDetail />} />
-              <Route path="/yoga-detail" element={<YogaDetail />} />
-              <Route path="/pilates-detail" element={<PilatesDetail />} />
-              <Route path="/meal-detail" element={<MealDetail />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/settings" element={<Settings />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppContent />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
