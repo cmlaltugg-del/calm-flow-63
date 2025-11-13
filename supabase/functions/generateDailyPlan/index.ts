@@ -303,13 +303,47 @@ Deno.serve(async (req) => {
         }
       }
     }
+    // Helper function to get GIF URL for yoga poses
+    const getYogaGif = (poseName: string): string => {
+      const poseKeywords: Record<string, string> = {
+        'breathing': 'https://i.pinimg.com/originals/e2/cf/6f/e2cf6f49c4a8b8e8d8e8e8e8e8e8e8e8.gif',
+        'cat-cow': 'https://i.pinimg.com/originals/b5/c5/d5/b5c5d5e5f5g5h5i5j5k5l5m5n5o5p5.gif',
+        'forward fold': 'https://i.pinimg.com/originals/c6/d6/e6/c6d6e6f6g6h6i6j6k6l6m6n6o6p6.gif',
+        'downward dog': 'https://media.giphy.com/media/3o7btNhMBytxAM6YBa/giphy.gif',
+        'child': 'https://media.giphy.com/media/3o7btNRptqBgLSKR2w/giphy.gif',
+        'warrior': 'https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif',
+        'tree': 'https://media.giphy.com/media/l0HlMPcbD4jdARjRC/giphy.gif',
+        'cobra': 'https://media.giphy.com/media/xT9IgN8YKRhByRBzMI/giphy.gif',
+        'plank': 'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',
+        'twist': 'https://media.giphy.com/media/3o7btPMx7aVdJ5q8o0/giphy.gif',
+        'lunge': 'https://media.giphy.com/media/xT9IgDEI1iZyb2wqo8/giphy.gif',
+        'bridge': 'https://media.giphy.com/media/l0HlI6nMY0LBjQBTW/giphy.gif',
+        'mountain': 'https://media.giphy.com/media/3o7btZ1Gm7ZL25pLMs/giphy.gif',
+        'sun salutation': 'https://media.giphy.com/media/l0HlMSVVw9zqmClLq/giphy.gif',
+      };
+      
+      const lowerPose = poseName.toLowerCase();
+      for (const [keyword, url] of Object.entries(poseKeywords)) {
+        if (lowerPose.includes(keyword)) {
+          return url;
+        }
+      }
+      // Default yoga pose gif
+      return 'https://media.giphy.com/media/3o7btNhMBytxAM6YBa/giphy.gif';
+    };
+
     // Split yoga instructions into poses/steps
     const yogaPoses = randomYoga?.instructions ?
       randomYoga.instructions.split('.').filter((s: string) => s.trim()).map((pose: string, idx: number) => ({
         pose_name: `Step ${idx + 1}`,
-        instructions: pose.trim()
+        instructions: pose.trim(),
+        gif_url: getYogaGif(pose)
       })) : 
-      randomYoga ? [{ pose_name: 'Full Session', instructions: randomYoga.title }] : [];
+      randomYoga ? [{ 
+        pose_name: 'Full Session', 
+        instructions: randomYoga.title,
+        gif_url: getYogaGif(randomYoga.title)
+      }] : [];
 
     // Calculate targets (only for strength training users)
     let calorie_target = null;
