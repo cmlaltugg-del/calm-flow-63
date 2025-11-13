@@ -142,7 +142,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 pb-24 mb-safe">
       <div className="max-w-md mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Profile Settings</h1>
