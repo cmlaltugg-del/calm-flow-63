@@ -75,18 +75,26 @@ export const PILATES_GIFS: Record<string, string> = {
 };
 
 /**
- * Get the public URL for a workout GIF from Supabase Storage
+ * Get the public URL for a workout GIF from Supabase Storage or local fallback
  * @param gifFileName - The filename from the mapping (e.g., "pushups.gif")
- * @returns Public URL of the GIF or null if not found
+ * @returns Public URL of the GIF or local path
  */
 export const getWorkoutGifUrl = (gifFileName: string): string | null => {
   if (!gifFileName) return null;
   
+  // First try Supabase Storage
   const { data } = supabase.storage
     .from('workout-gifs')
     .getPublicUrl(gifFileName);
   
-  return data?.publicUrl || null;
+  if (data?.publicUrl) {
+    return data.publicUrl;
+  }
+  
+  // Fallback to local public folder
+  // Convert .gif extension to .png for local files
+  const localFileName = gifFileName.replace('.gif', '.png');
+  return `/workout-gifs/${localFileName}`;
 };
 
 /**
