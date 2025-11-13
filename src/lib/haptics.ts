@@ -1,8 +1,19 @@
+import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 
 type HapticType = "light" | "medium" | "heavy" | "success" | "warning" | "error";
 
+const isNativePlatform = () => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
 export const triggerHaptic = async (type: HapticType = "light") => {
+  if (!isNativePlatform()) return;
+  
   try {
     switch (type) {
       case "light":
@@ -31,6 +42,8 @@ export const triggerHaptic = async (type: HapticType = "light") => {
 };
 
 export const triggerSelectionHaptic = async () => {
+  if (!isNativePlatform()) return;
+  
   try {
     await Haptics.selectionStart();
     await Haptics.selectionChanged();
