@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { triggerCelebration } from "@/lib/celebration";
 import { triggerHaptic } from "@/lib/haptics";
+import { findGifByName } from "@/lib/workoutGifs";
 
 const YogaDetail = () => {
   const location = useLocation();
@@ -77,36 +78,38 @@ const YogaDetail = () => {
         </div>
 
         <div className="space-y-4">
-          {posesList.map((pose: any, index: number) => (
-            <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                  {index + 1}
+          {posesList.map((pose: any, index: number) => {
+            const gifUrl = pose.gif_url || findGifByName(pose.pose_name, 'yoga');
+            
+            return (
+              <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-medium">{pose.pose_name}</h2>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-medium">{pose.pose_name}</h2>
+                
+                {gifUrl && (
+                  <div className="rounded-2xl overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
+                    <img 
+                      src={gifUrl} 
+                      alt={`${pose.pose_name} demonstration`}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">How to Perform:</h3>
+                  <p className="text-foreground leading-relaxed">{pose.instructions}</p>
                 </div>
-              </div>
-              
-              {/* GIF Animation */}
-              {pose.gif_url && (
-                <div className="rounded-2xl overflow-hidden bg-muted/30 aspect-video flex items-center justify-center">
-                  <img 
-                    src={pose.gif_url} 
-                    alt={`${pose.pose_name} demonstration`}
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              
-              {/* Instructions */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">How to Perform:</h3>
-                <p className="text-foreground leading-relaxed">{pose.instructions}</p>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
         <Button 

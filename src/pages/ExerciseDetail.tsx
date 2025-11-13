@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { triggerCelebration } from "@/lib/celebration";
 import { triggerHaptic } from "@/lib/haptics";
+import { findGifByName } from "@/lib/workoutGifs";
 
 const ExerciseDetail = () => {
   const location = useLocation();
@@ -81,20 +82,36 @@ const ExerciseDetail = () => {
         </div>
 
         <div className="space-y-4">
-          {exercisesList.map((exercise: any, index: number) => (
-            <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-3">
-              <div className="flex items-start justify-between">
-                <h2 className="text-xl font-medium">{exercise.title}</h2>
-                {exercise.calories > 0 && (
-                  <Badge variant="secondary">{exercise.calories} cal</Badge>
+          {exercisesList.map((exercise: any, index: number) => {
+            const gifUrl = exercise.gif_url || findGifByName(exercise.title, 'exercise');
+            
+            return (
+              <Card key={index} className="p-6 rounded-3xl shadow-wellness border-border/50 space-y-3">
+                <div className="flex items-start justify-between">
+                  <h2 className="text-xl font-medium">{exercise.title}</h2>
+                  {exercise.calories > 0 && (
+                    <Badge variant="secondary">{exercise.calories} cal</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{exercise.reps_or_duration}</p>
+                
+                {gifUrl && (
+                  <div className="mt-4 rounded-2xl overflow-hidden bg-muted/30">
+                    <img 
+                      src={gifUrl} 
+                      alt={`${exercise.title} demonstration`}
+                      className="w-full h-auto"
+                      loading="lazy"
+                    />
+                  </div>
                 )}
-              </div>
-              <p className="text-sm text-muted-foreground">{exercise.reps_or_duration}</p>
-              {exercise.instructions && (
-                <p className="text-muted-foreground whitespace-pre-wrap">{exercise.instructions}</p>
-              )}
-            </Card>
-          ))}
+                
+                {exercise.instructions && (
+                  <p className="text-muted-foreground whitespace-pre-wrap">{exercise.instructions}</p>
+                )}
+              </Card>
+            );
+          })}
         </div>
 
         <Button 
