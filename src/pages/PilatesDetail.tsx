@@ -19,6 +19,25 @@ const PilatesDetail = () => {
   // Use exercises array if available, otherwise fall back to instructions
   const exercisesList = exercises || [{ title: 'Full Session', instructions: instructions || 'No instructions available', duration_minutes: 0 }];
 
+  // Check if we have no data at all
+  if (!planId || (!exercises && !title)) {
+    return (
+      <div className="min-h-screen bg-background pb-20 mb-safe">
+        <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <Card className="p-8 rounded-3xl shadow-wellness border-border/50 text-center space-y-4">
+            <h2 className="text-2xl font-light text-foreground">No Pilates Plan</h2>
+            <p className="text-muted-foreground">Your Pilates plan couldn't be loaded. Please try refreshing or generating a new plan.</p>
+            <Button onClick={() => navigate("/dashboard")} className="mt-4">Back to Dashboard</Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const handleMarkComplete = async () => {
     if (!planId) {
       toast({
