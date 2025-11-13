@@ -45,10 +45,7 @@ Return ONLY valid JSON with this exact structure:
   "title": "Meal Name",
   "instructions": "Step by step cooking instructions (max 200 chars)",
   "ingredients": "Comma separated ingredients list",
-  "calories_estimate": 450,
-  "protein_g": 35,
-  "carbs_g": 40,
-  "fat_g": 15
+  "calories_estimate": 450
 }`;
 
   const goalText = profile.goal === 'gain_muscle' ? 'high protein for muscle gain' : 
@@ -75,8 +72,7 @@ Return ONLY valid JSON with this exact structure:
 {
   "title": "Yoga Session Name",
   "instructions": "Detailed pose sequence and breathing instructions (max 250 chars)",
-  "duration_minutes": 25,
-  "intensity_level": "medium"
+  "duration_minutes": 25
 }`;
 
   const intensity = profile.intensity || 'medium';
@@ -96,8 +92,7 @@ Return ONLY valid JSON with this exact structure:
 {
   "title": "Pilates Workout Name",
   "instructions": "Exercise sequence with focus points (max 250 chars)",
-  "duration_minutes": 25,
-  "level": "intermediate"
+  "duration_minutes": 25
 }`;
 
   const intensity = profile.intensity || 'medium';
@@ -120,10 +115,8 @@ Return ONLY valid JSON with this exact structure:
 {
   "title": "Exercise Name",
   "instructions": "Proper form and execution steps (max 200 chars)",
-  "gif_url": "",
   "sets": 4,
-  "reps": "10-12",
-  "difficulty": "intermediate"
+  "reps": "10-12"
 }`;
 
   const equipment = equipmentType === 'gym' ? 'gym equipment (barbells, machines)' : 'bodyweight or minimal home equipment';
@@ -353,27 +346,19 @@ Deno.serve(async (req) => {
       
       exercise_title: exercise?.title || null,
       exercise_instructions: exercise?.instructions || null,
-      exercise_gif_url: exercise?.gif_url || null,
-      exercise_sets: exercise?.sets || null,
-      exercise_reps: exercise?.reps || null,
-      exercise_difficulty: exercise?.difficulty || null,
+      reps_or_duration: exercise?.reps || exercise?.sets ? `${exercise.sets} sets x ${exercise.reps} reps` : null,
       
       meal_title: meal?.title || null,
       meal_instructions: meal?.instructions || null,
       meal_ingredients: meal?.ingredients || null,
       meal_calories_estimate: meal?.calories_estimate || null,
-      meal_protein_g: meal?.protein_g || null,
-      meal_carbs_g: meal?.carbs_g || null,
-      meal_fat_g: meal?.fat_g || null,
       
       yoga_title: yoga?.title || null,
       yoga_instructions: yoga?.instructions || null,
-      yoga_gif_url: yoga?.gif_url || '',
       yoga_duration_minutes: yoga?.duration_minutes || null,
       
       pilates_title: pilates?.title || null,
       pilates_instructions: pilates?.instructions || null,
-      pilates_gif_url: pilates?.gif_url || '',
       pilates_duration_minutes: pilates?.duration_minutes || null,
     };
 
