@@ -1,9 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, checkRateLimit, validateProfile } from '../_shared/security.ts';
 
 // AI-powered content generation helper
 async function generateWithAI(prompt: string, systemPrompt: string): Promise<string> {
@@ -190,6 +186,9 @@ IMPORTANT: Use ONLY exercises from the available list above. Include 5-6 exercis
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -209,6 +208,15 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check rate limit
+    const rateLimit = await checkRateLimit(supabase, user.id, 'generateDailyPlan');
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({ error: rateLimit.message }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

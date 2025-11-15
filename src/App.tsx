@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CookieConsent } from "@/components/CookieConsent";
 import TabBar from "@/components/TabBar";
 import { useLocation } from "react-router-dom";
 import Welcome from "./pages/Welcome";
@@ -25,6 +26,7 @@ import MealDetail from "./pages/MealDetail";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,10 +61,12 @@ const AppContent = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/privacy" element={<Privacy />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideTabBar && <TabBar />}
+      <CookieConsent />
     </>
   );
 };
