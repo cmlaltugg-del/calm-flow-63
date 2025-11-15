@@ -14,9 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          request_count: number | null
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          request_count?: number | null
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          request_count?: number | null
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       daily_plans: {
         Row: {
           calorie_target: number | null
+          completed_exercise_at: string | null
+          completed_meal_at: string | null
+          completed_pilates_at: string | null
+          completed_yoga_at: string | null
           created_at: string
           daily_water_target_liters: number
           exercise_instructions: string | null
@@ -47,6 +124,10 @@ export type Database = {
         }
         Insert: {
           calorie_target?: number | null
+          completed_exercise_at?: string | null
+          completed_meal_at?: string | null
+          completed_pilates_at?: string | null
+          completed_yoga_at?: string | null
           created_at?: string
           daily_water_target_liters: number
           exercise_instructions?: string | null
@@ -77,6 +158,10 @@ export type Database = {
         }
         Update: {
           calorie_target?: number | null
+          completed_exercise_at?: string | null
+          completed_meal_at?: string | null
+          completed_pilates_at?: string | null
+          completed_yoga_at?: string | null
           created_at?: string
           daily_water_target_liters?: number
           exercise_instructions?: string | null
@@ -224,48 +309,111 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          cookie_consent: boolean | null
+          cookie_consent_date: string | null
           created_at: string
+          current_streak: number | null
           daily_calories: number | null
+          data_processing_consent: boolean | null
           gender: string | null
           goal: string | null
           height: number | null
           intensity: string | null
+          last_completed_date: string | null
+          last_water_update_date: string | null
+          longest_streak: number | null
+          marketing_consent: boolean | null
           protein_target: number | null
           target_weight_kg: number | null
+          total_workouts_completed: number | null
           training_styles: string[] | null
           user_id: string
+          water_intake_today: number | null
           weight: number | null
           workout_mode: string | null
         }
         Insert: {
           age?: number | null
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
           created_at?: string
+          current_streak?: number | null
           daily_calories?: number | null
+          data_processing_consent?: boolean | null
           gender?: string | null
           goal?: string | null
           height?: number | null
           intensity?: string | null
+          last_completed_date?: string | null
+          last_water_update_date?: string | null
+          longest_streak?: number | null
+          marketing_consent?: boolean | null
           protein_target?: number | null
           target_weight_kg?: number | null
+          total_workouts_completed?: number | null
           training_styles?: string[] | null
           user_id: string
+          water_intake_today?: number | null
           weight?: number | null
           workout_mode?: string | null
         }
         Update: {
           age?: number | null
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
           created_at?: string
+          current_streak?: number | null
           daily_calories?: number | null
+          data_processing_consent?: boolean | null
           gender?: string | null
           goal?: string | null
           height?: number | null
           intensity?: string | null
+          last_completed_date?: string | null
+          last_water_update_date?: string | null
+          longest_streak?: number | null
+          marketing_consent?: boolean | null
           protein_target?: number | null
           target_weight_kg?: number | null
+          total_workouts_completed?: number | null
           training_styles?: string[] | null
           user_id?: string
+          water_intake_today?: number | null
           weight?: number | null
           workout_mode?: string | null
+        }
+        Relationships: []
+      }
+      workout_history: {
+        Row: {
+          calories_burned: number | null
+          completed_at: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          plan_date: string
+          user_id: string
+          workout_type: string
+        }
+        Insert: {
+          calories_burned?: number | null
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          plan_date: string
+          user_id: string
+          workout_type: string
+        }
+        Update: {
+          calories_burned?: number | null
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          plan_date?: string
+          user_id?: string
+          workout_type?: string
         }
         Relationships: []
       }

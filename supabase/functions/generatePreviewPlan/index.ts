@@ -1,9 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, validateProfile } from '../_shared/security.ts';
 
 // AI-powered content generation helper
 async function generateWithAI(prompt: string, systemPrompt: string): Promise<string> {
@@ -182,6 +178,9 @@ IMPORTANT: Use ONLY exercises from the available list above.`;
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -189,9 +188,11 @@ Deno.serve(async (req) => {
   try {
     const { profile } = await req.json();
     
-    if (!profile || !profile.weight) {
+    // Validate profile data
+    const validation = validateProfile(profile);
+    if (!validation.valid) {
       return new Response(
-        JSON.stringify({ error: 'Missing required profile data' }),
+        JSON.stringify({ error: validation.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

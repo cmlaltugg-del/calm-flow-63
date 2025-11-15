@@ -5,10 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Home, User, Settings as SettingsIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2, Home, User, Settings as SettingsIcon, Download, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { downloadUserData, deleteUserAccount } from "@/lib/gdpr";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -17,6 +29,8 @@ const Settings = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [profile, setProfile] = useState({
     height: "",
     weight: "",
@@ -179,6 +193,56 @@ const Settings = () => {
     }
   };
 
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      if (!user) throw new Error('Not authenticated');
+      
+      await downloadUserData(user.id);
+      
+      toast({
+        title: "Success",
+        description: "Your data has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to export data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      if (!user) throw new Error('Not authenticated');
+      
+      await deleteUserAccount(user.id);
+      
+      toast({
+        title: "Account Deleted",
+        description: "Your account and all associated data have been permanently deleted.",
+      });
+      
+      // Sign out and redirect to welcome page
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -292,6 +356,109 @@ const Settings = () => {
             Logout
           </Button>
         </div>
+
+        {/* GDPR Compliance Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacy & Data</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Export Your Data</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Download a copy of all your personal data in JSON format. 
+                This includes your profile, workout history, and meal plans.
+              </p>
+              <Button
+                onClick={handleExportData}
+                disabled={exporting}
+                variant="outline"
+                className="w-full"
+              >
+                {exporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export My Data
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div className="pt-4 border-t">
+              <h3 className="font-medium mb-2 text-destructive">Delete Account</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Permanently delete your account and all associated data. 
+                This action cannot be undone.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    disabled={deleting}
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete My Account
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      Delete Account?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your
+                      account and remove all your data from our servers, including:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Profile information</li>
+                        <li>Workout history</li>
+                        <li>Daily plans</li>
+                        <li>Progress tracking</li>
+                      </ul>
+                      <p className="mt-3 font-semibold">
+                        Are you absolutely sure you want to proceed?
+                      </p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, Delete My Account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+
+            <div className="pt-4 border-t">
+              <p className="text-xs text-muted-foreground">
+                Read our{' '}
+                <a href="/privacy" className="text-primary hover:underline">
+                  Privacy Policy
+                </a>
+                {' '}to learn more about how we handle your data.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Navigation */}
