@@ -306,6 +306,30 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_cache: {
+        Row: {
+          cached_plan: Json
+          created_at: string | null
+          hit_count: number | null
+          id: string
+          profile_hash: string
+        }
+        Insert: {
+          cached_plan: Json
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          profile_hash: string
+        }
+        Update: {
+          cached_plan?: Json
+          created_at?: string | null
+          hit_count?: number | null
+          id?: string
+          profile_hash?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -323,7 +347,12 @@ export type Database = {
           last_water_update_date: string | null
           longest_streak: number | null
           marketing_consent: boolean | null
+          onboarding_completed: boolean | null
           protein_target: number | null
+          stripe_customer_id: string | null
+          subscription_end_date: string | null
+          subscription_status: string | null
+          subscription_tier: string | null
           target_weight_kg: number | null
           total_workouts_completed: number | null
           training_styles: string[] | null
@@ -348,7 +377,12 @@ export type Database = {
           last_water_update_date?: string | null
           longest_streak?: number | null
           marketing_consent?: boolean | null
+          onboarding_completed?: boolean | null
           protein_target?: number | null
+          stripe_customer_id?: string | null
+          subscription_end_date?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           target_weight_kg?: number | null
           total_workouts_completed?: number | null
           training_styles?: string[] | null
@@ -373,7 +407,12 @@ export type Database = {
           last_water_update_date?: string | null
           longest_streak?: number | null
           marketing_consent?: boolean | null
+          onboarding_completed?: boolean | null
           protein_target?: number | null
+          stripe_customer_id?: string | null
+          subscription_end_date?: string | null
+          subscription_status?: string | null
+          subscription_tier?: string | null
           target_weight_kg?: number | null
           total_workouts_completed?: number | null
           training_styles?: string[] | null
@@ -381,6 +420,36 @@ export type Database = {
           water_intake_today?: number | null
           weight?: number | null
           workout_mode?: string | null
+        }
+        Relationships: []
+      }
+      subscription_tiers: {
+        Row: {
+          features: Json
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number | null
+          stripe_price_id: string | null
+        }
+        Insert: {
+          features: Json
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly?: number | null
+          stripe_price_id?: string | null
+        }
+        Update: {
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          stripe_price_id?: string | null
         }
         Relationships: []
       }

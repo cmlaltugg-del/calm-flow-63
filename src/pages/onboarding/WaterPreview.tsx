@@ -2,14 +2,33 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Droplet } from "lucide-react";
 import OnboardingHeader from "@/components/OnboardingHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { analytics } from "@/lib/analytics";
 
 const WaterPreview = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const weight = sessionStorage.getItem("weight") || "70";
   const dailyTarget = Math.round(parseInt(weight) * 0.033 * 10) / 10;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     sessionStorage.setItem("onboardingComplete", "true");
+    
+    // Track onboarding completion
+    const goal = sessionStorage.getItem("goal");
+    const trainingStylesStr = sessionStorage.getItem("trainingStyles");
+    const trainingStyles = trainingStylesStr ? JSON.parse(trainingStylesStr) : [];
+    analytics.track('Onboarding Completed', { goal, training_styles: trainingStyles });
+    
+    // Set onboarding_completed flag in profile
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('user_id', user.id);
+    }
+    
     navigate("/dashboard");
   };
 
