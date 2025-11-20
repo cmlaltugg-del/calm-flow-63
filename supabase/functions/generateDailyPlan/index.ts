@@ -351,60 +351,113 @@ Deno.serve(async (req) => {
       calorie_target: Math.round(calorieTarget)
     };
 
-    // Generate AI-powered content based on training style
+    // Check cache first (Priority 2: Performance)
+    const profileHash = JSON.stringify({
+      goal: profile.goal,
+      intensity: profile.intensity,
+      training_styles: trainingStyles.sort()
+    });
+
+    const { data: cachedPlan } = await supabase
+      .from('plan_cache')
+      .select('cached_plan, id, hit_count')
+      .eq('profile_hash', profileHash)
+      .maybeSingle();
+
     let exercise = null;
     let yoga = null;
     let pilates = null;
     let meal = null;
 
-    try {
-      console.log('Generating meal with AI...');
-      meal = await generateMeal(enrichedProfile);
-      console.log('Meal generated:', meal.title);
+    if (cachedPlan) {
+      console.log('Using cached plan');
+      
+      // Use cached data
+      const cached = cachedPlan.cached_plan as any;
+      exercise = cached.exercise || null;
+      yoga = cached.yoga || null;
+      pilates = cached.pilates || null;
+      meal = cached.meal || null;
+      
+      // Increment hit count
+      const { error: updateError } = await supabase
+        .from('plan_cache')
+        .update({ hit_count: (cachedPlan.hit_count || 0) + 1 })
+        .eq('id', cachedPlan.id);
+      
+      if (updateError) console.error('Hit count update error:', updateError);
+    } else {
+      // Generate with AI in parallel (Priority 2: Performance)
+      console.log('Generating AI-powered content in parallel...');
+      
+      type GenerationResult = 
+        | { type: string; data: any; error?: never }
+        | { type: string; error: string; data?: never };
+      
+      const generationPromises: Promise<GenerationResult>[] = [];
 
-      // Generate yoga if requested
+      // Always generate meal
+      generationPromises.push(
+        generateMeal(enrichedProfile)
+          .then(m => ({ type: 'meal', data: m } as GenerationResult))
+          .catch(e => ({ type: 'meal', error: e.message } as GenerationResult))
+      );
+
       if (hasYoga) {
-        console.log('Generating yoga session with AI...');
-        try {
-          yoga = await generateYoga(enrichedProfile);
-          console.log('Yoga generated:', yoga.title);
-        } catch (yogaError) {
-          console.error('Yoga generation failed:', yogaError);
-          // Continue with other content generation
-        }
+        generationPromises.push(
+          generateYoga(enrichedProfile)
+            .then(y => ({ type: 'yoga', data: y } as GenerationResult))
+            .catch(e => ({ type: 'yoga', error: e.message } as GenerationResult))
+        );
       }
 
-      // Generate pilates if requested
       if (hasPilates) {
-        console.log('Generating pilates workout with AI...');
-        try {
-          pilates = await generatePilates(enrichedProfile);
-          console.log('Pilates generated:', pilates.title);
-        } catch (pilatesError) {
-          console.error('Pilates generation failed:', pilatesError);
-          // Continue with other content generation
-        }
+        generationPromises.push(
+          generatePilates(enrichedProfile)
+            .then(p => ({ type: 'pilates', data: p } as GenerationResult))
+            .catch(e => ({ type: 'pilates', error: e.message } as GenerationResult))
+        );
       }
 
-      // Generate strength training if requested
       if (hasStrength || hasGym || hasHome) {
         const equipmentType = hasGym ? 'gym' : 'home';
-        console.log(`Generating ${equipmentType} exercise with AI...`);
-        try {
-          exercise = await generateExercise(enrichedProfile, equipmentType);
-          console.log('Exercise generated:', exercise.title);
-        } catch (exerciseError) {
-          console.error('Exercise generation failed:', exerciseError);
-          // Continue with other content generation
+        generationPromises.push(
+          generateExercise(enrichedProfile, equipmentType)
+            .then(ex => ({ type: 'exercise', data: ex } as GenerationResult))
+            .catch(e => ({ type: 'exercise', error: e.message } as GenerationResult))
+        );
+      }
+
+      // Execute all in parallel
+      const results = await Promise.all(generationPromises);
+
+      // Process results
+      for (const result of results) {
+        if ('error' in result && result.error) {
+          console.error(`${result.type} generation failed:`, result.error);
+        } else if ('data' in result && result.data) {
+          if (result.type === 'meal') meal = result.data;
+          if (result.type === 'yoga') yoga = result.data;
+          if (result.type === 'pilates') pilates = result.data;
+          if (result.type === 'exercise') exercise = result.data;
         }
       }
-    } catch (aiError) {
-      console.error('AI generation error:', aiError);
-      const errorMessage = aiError instanceof Error ? aiError.message : 'Unknown AI error';
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate AI content', details: errorMessage }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+
+      // At least meal must succeed
+      if (!meal) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to generate meal plan' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Cache the generated content
+      const { error: cacheError } = await supabase.from('plan_cache').upsert({
+        profile_hash: profileHash,
+        cached_plan: { exercise, yoga, pilates, meal }
+      });
+      
+      if (cacheError) console.error('Cache error:', cacheError);
     }
 
     // Construct daily plan
@@ -417,7 +470,7 @@ Deno.serve(async (req) => {
       
       exercise_title: exercise?.title || null,
       exercise_instructions: exercise?.instructions || null,
-      reps_or_duration: exercise ? 'N/A' : 'N/A',
+      reps_or_duration: exercise?.exercises?.[0]?.reps_or_duration || 'N/A',
       exercises_json: exercise?.exercises || null,
       total_exercise_calories: exercise?.total_calories || null,
       

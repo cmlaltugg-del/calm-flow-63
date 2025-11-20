@@ -19,6 +19,7 @@ import { getTimeBasedGreeting, getMotivationalMessage } from "@/lib/greetings";
 import { triggerStreakCelebration } from "@/lib/celebration";
 import PullToRefresh from "@/components/PullToRefresh";
 import { triggerHaptic } from "@/lib/haptics";
+import { analytics } from "@/lib/analytics";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -27,17 +28,28 @@ const Dashboard = () => {
   const [waterIntake, setWaterIntake] = useState(0);
   const [waterLoading, setWaterLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [dailyPlan, setDailyPlan] = useState<any>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [signupCardSource, setSignupCardSource] = useState<string>('');
   const [profile, setProfile] = useState<any>(null);
   const [weeklyStats, setWeeklyStats] = useState({ workouts: 0, calories: 0, goalPercentage: 0 });
+  const [error, setError] = useState<string | null>(null);
 
   const dailyWaterTarget = dailyPlan?.daily_water_target_liters || 2.5;
 
   useEffect(() => {
     if (authLoading) return;
+    
+    // Identify user for analytics
+    if (user) {
+      analytics.identify(user.id, {
+        email: user.email,
+        created_at: user.created_at
+      });
+    }
+    
     const onboardingComplete = sessionStorage.getItem('onboardingComplete');
     if (user) {
       fetchDailyPlan();
@@ -243,15 +255,36 @@ const Dashboard = () => {
   const generateNewPlan = async () => {
     try {
       console.log('Invoking generateDailyPlan edge function...');
-      setLoading(true);
+      setIsGenerating(true);
+      setError(null);
       const { data, error } = await supabase.functions.invoke('generateDailyPlan');
       
       if (error) {
         console.error('generateDailyPlan error:', error);
+        
+        // Handle rate limit errors specifically
+        if (error.message?.includes('Rate limit exceeded')) {
+          toast({
+            title: "Rate Limit Reached",
+            description: "You've reached your daily plan generation limit. Try again tomorrow.",
+            variant: "destructive",
+          });
+          setError(error.message);
+          return;
+        }
+        
         throw error;
       }
       
       console.log('Plan generated successfully:', data);
+      
+      // Track plan generation
+      analytics.track('Plan Generated', {
+        has_exercise: !!data?.exercise_title,
+        has_yoga: !!data?.yoga_title,
+        has_pilates: !!data?.pilates_title,
+        has_meal: !!data?.meal_title
+      });
       
       // Set the plan data directly from the response for immediate display
       if (data) {
@@ -264,13 +297,24 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error generating plan:', error);
+      const errorMsg = "We couldn't prepare your personal plan — contact support.";
+      setError(errorMsg);
       toast({
         title: "Error",
-        description: "We couldn't prepare your personal plan — contact support.",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    if (user) {
+      generateNewPlan();
+    } else {
+      generatePreviewPlan();
     }
   };
 
