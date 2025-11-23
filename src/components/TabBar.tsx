@@ -1,4 +1,4 @@
-import { Home, User, Settings as SettingsIcon } from "lucide-react";
+import { Home, User, Settings as SettingsIcon, TrendingUp } from "lucide-react";
 import { NavLink } from "./NavLink";
 import { cn } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
@@ -6,6 +6,7 @@ import { triggerHaptic } from "@/lib/haptics";
 const TabBar = () => {
   const tabs = [
     { to: "/dashboard", icon: Home, label: "Home" },
+    { to: "/analytics", icon: TrendingUp, label: "Analytics" },
     { to: "/profile", icon: User, label: "Profile" },
     { to: "/settings", icon: SettingsIcon, label: "Settings" },
   ];
