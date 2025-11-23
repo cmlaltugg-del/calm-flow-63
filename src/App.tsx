@@ -19,6 +19,7 @@ import Intensity from "./pages/onboarding/Intensity";
 import WorkoutMode from "./pages/onboarding/WorkoutMode";
 import WaterPreview from "./pages/onboarding/WaterPreview";
 import Dashboard from "./pages/Dashboard";
+import Analytics from "./pages/Analytics";
 import ExerciseDetail from "./pages/ExerciseDetail";
 import YogaDetail from "./pages/YogaDetail";
 import PilatesDetail from "./pages/PilatesDetail";
@@ -54,6 +55,7 @@ const AppContent = () => {
         <Route path="/onboarding/workout-mode" element={<WorkoutMode />} />
         <Route path="/onboarding/water-preview" element={<WaterPreview />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/exercise-detail" element={<ExerciseDetail />} />
         <Route path="/yoga-detail" element={<YogaDetail />} />
         <Route path="/pilates-detail" element={<PilatesDetail />} />
