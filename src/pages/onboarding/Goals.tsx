@@ -27,15 +27,14 @@ const Goals = () => {
 
   const handleContinue = () => {
     sessionStorage.setItem("goal", selectedGoal);
-    
+
     if (hasGymOrHome) {
       // Users with gym/home workout continue to workout mode
       navigate("/onboarding/workout-mode");
     } else {
-      // Yoga/Pilates only users skip workout mode and go to dashboard
+      // Yoga/Pilates only users set a home workout mode and choose intensity
       sessionStorage.setItem("workoutMode", "home");
-      sessionStorage.setItem("onboardingComplete", "true");
-      navigate("/dashboard");
+      navigate("/onboarding/intensity");
     }
   };
 

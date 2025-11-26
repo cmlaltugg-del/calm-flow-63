@@ -168,7 +168,7 @@ const Dashboard = () => {
             profileDataToInsert.daily_calories = daily_calories;
             profileDataToInsert.protein_target = protein_target;
           } else {
-            profileDataToInsert.intensity = intensity;
+            profileDataToInsert.intensity = intensity || 'medium';
           }
 
           const { data: createdProfile, error: createErr } = await supabase
