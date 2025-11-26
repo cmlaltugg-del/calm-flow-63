@@ -91,7 +91,7 @@ export const SignupModal = ({ open, onOpenChange, onSignupSuccess, cardSource }:
         profileData.protein_target = protein_target;
       } else {
         // For pilates/yoga only users, just save intensity
-        profileData.intensity = intensity;
+        profileData.intensity = intensity || 'medium';
       }
 
       // Create profile with onboarding data
